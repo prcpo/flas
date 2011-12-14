@@ -20,6 +20,8 @@ VALUES ('doc.pay', 'Платёжные поручения');
 insert into app.modes (tree, lbl) 
 VALUES ('dic.companies', 'Организации');
 
+insert into app.actions (tree, action, lbl, func) 
+VALUES ('doc.pay', 'open', '*Список', 'doc_list');
 
 
 insert into dic.param_def (tree, lbl, note) 

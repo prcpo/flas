@@ -231,6 +231,15 @@ CREATE TABLE modes (
 );
 
 
+CREATE TABLE actions
+(
+  tree public.ltree NOT NULL,
+  action text NOT NULL,
+  lbl text,
+  func text
+);
+
+
 SET search_path = dic, pg_catalog;
 
 CREATE TABLE param_def (
@@ -347,6 +356,13 @@ SET search_path = app, pg_catalog;
 ALTER TABLE ONLY modes
     ADD CONSTRAINT pk_modes PRIMARY KEY (tree);
 
+ALTER TABLE ONLY actions
+    ADD CONSTRAINT pk_actions PRIMARY KEY (tree, action);
+
+ALTER TABLE ONLY actions
+    ADD CONSTRAINT fk_actions_tree FOREIGN KEY (tree)
+      REFERENCES app.modes (tree) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE;
 
 SET search_path = dic, pg_catalog;
 
