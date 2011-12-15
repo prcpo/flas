@@ -30,9 +30,44 @@ COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
 
 ---------
 
-SET search_path = app, pg_catalog;
+SET search_path = public, pg_catalog;
 
-CREATE FUNCTION modes_node_children_get(_node_code text DEFAULT ''::text) RETURNS text
+
+CREATE FUNCTION array_to_json(anyarray) RETURNS text
+    LANGUAGE sql
+    AS $_$select '{' || array_to_string($1, ', ') || '}'$_$;
+
+
+CREATE FUNCTION json_element(text, anyelement) RETURNS text
+    LANGUAGE sql
+    AS $_$select '"' || $1 || '": ' || regexp_replace($2,'^([^\{]*[^\}])$',E'"\\1"','g');$_$;
+
+CREATE FUNCTION json_row(VARIADIC text[]) RETURNS text
+    LANGUAGE sql
+    AS $_$select array_to_json($1)$_$;
+
+
+
+SET search_path = app, public, pg_catalog;
+
+CREATE OR REPLACE FUNCTION app.actions_get(public.ltree)
+  RETURNS text LANGUAGE sql AS
+$BODY$select array_to_json(
+	array(
+		select 
+			json_element(
+			"action",
+				json_row(
+					json_element('Text',lbl),
+					json_element('Function',func)
+				)
+			)
+		from app.actions
+		where tree=$1
+	)
+)$BODY$;
+
+CREATE OR REPLACE FUNCTION modes_node_children_get(_node_code text DEFAULT ''::text) RETURNS text
     LANGUAGE sql
     AS $_$select array_to_json(
 	array(
@@ -40,9 +75,9 @@ CREATE FUNCTION modes_node_children_get(_node_code text DEFAULT ''::text) RETURN
 			json_element(
 				tree::text,
 				json_row(
-					json_element('Function', 'table_show(\"' || tree::text || '\")'),
 					json_element('Text', lbl),
-					json_element('Type', 'Mode'::text)
+					json_element('Type', 'Mode'::text),
+					json_element('Action', app.actions_get(tree))
 				)
 			)
 			from
@@ -146,29 +181,10 @@ end;$$;
 
 SET search_path = public, pg_catalog;
 
-
-CREATE FUNCTION array_to_json(anyarray) RETURNS text
-    LANGUAGE sql
-    AS $_$select '{' || array_to_string($1, ', ') || '}'$_$;
-
-
-CREATE FUNCTION json_element(text, anyelement) RETURNS text
-    LANGUAGE sql
-    AS $_$select '"' || $1 || '": ' || regexp_replace($2,'^([^\{]*[^\}])$',E'"\\1"','g');$_$;
-
-CREATE FUNCTION json_row(VARIADIC text[]) RETURNS text
-    LANGUAGE sql
-    AS $_$select array_to_json($1)$_$;
-
-
 CREATE FUNCTION modes_node_children_get(_node_code text DEFAULT ''::text) RETURNS text
     LANGUAGE sql
     AS $_$select app.modes_node_children_get($1);
 $_$;
-
-CREATE FUNCTION param_value_get(_param text) RETURNS text
-    LANGUAGE sql
-    AS $_$select dic.param_value_get($1)$_$;
 
 
 SET search_path = test, pg_catalog;
