@@ -90,8 +90,8 @@ class MdiDocument(QtGui.QWidget):
                                     rowspan, colspan)#, align)
             else:
                 self.grid.addWidget(widget)
-        self.showMaximized()
         self.setLayout(self.grid)
+        self.parentWidget().adjustSize()
 
     def fill_document(self, content):
         for item in content:
@@ -102,6 +102,7 @@ class MdiDocument(QtGui.QWidget):
                 child.addItem(content[item])
             elif isinstance(child, QtGui.QTextEdit):
                 child.document().setPlainText(content[item])
+        self.parentWidget().adjustSize()
                 
     def new(self, template, number):
         self.draw_document(template)
