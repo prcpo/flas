@@ -12,18 +12,27 @@ from PySide import QtCore, QtGui, QtSql
 import simplejson as json
 
 
-class ModeSelector(QtGui.QWidget):
-    """Mode selector widget"""
+class ModeWidget(QtGui.QPushButton):
+    """Виджет выбора режима"""
 
     def __init__(self, text = None):
-        super(ModeSelector, self).__init__()
+        super(ModeWidget, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
-        self.grid = QtGui.QGridLayout()
-        button = QtGui.QPushButton(text)
-        self.grid.addWidget(button)
-        self.setLayout(self.grid)
+        self.setText(text)
+        
+
+class DictionaryWidget(QtGui.QComboBox):
+    """Виджет со справочником"""
+
+    def __init__(self, text = None):
+        super(DictionaryWidget, self).__init__()
+
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        
+        self.setEditable(True)
+        self.setEditText(text)
 
 
 class MdiDocument(QtGui.QWidget):
@@ -41,7 +50,7 @@ class MdiDocument(QtGui.QWidget):
 
     def select_widget(self, type, text = None):
         if type == 'Dictionary':
-            return QtGui.QComboBox(text)
+            return DictionaryWidget(text)
         elif type == 'Label':
             return QtGui.QLabel(text)
         elif type == 'DocNumber':
@@ -53,7 +62,7 @@ class MdiDocument(QtGui.QWidget):
         elif type == 'Text':
             return QtGui.QTextEdit(text)
         elif type == 'Mode':
-            return ModeSelector(text)
+            return ModeWidget(text)
         else:
             return QtGui.QLineEdit(text)
         
