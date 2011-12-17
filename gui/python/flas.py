@@ -15,13 +15,13 @@ import simplejson as json
 class ModeSelector(QtGui.QWidget):
     """Mode selector widget"""
 
-    def __init__(self):
+    def __init__(self, text = None):
         super(ModeSelector, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
         self.grid = QtGui.QGridLayout()
-        button = QtGui.QPushButton("Byr")
+        button = QtGui.QPushButton(text)
         self.grid.addWidget(button)
         self.setLayout(self.grid)
 
@@ -39,24 +39,24 @@ class MdiDocument(QtGui.QWidget):
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-    def select_widget(self, type):
+    def select_widget(self, type, text = None):
         if type == 'Dictionary':
-            return QtGui.QComboBox()
+            return QtGui.QComboBox(text)
         elif type == 'Label':
-            return QtGui.QLabel()
+            return QtGui.QLabel(text)
         elif type == 'DocNumber':
-            return QtGui.QLabel()
+            return QtGui.QLabel(text)
         elif type == 'Date':
-            return QtGui.QLabel()
+            return QtGui.QLabel(text)
         elif type == 'Sum':
-            return QtGui.QLineEdit()
+            return QtGui.QLineEdit(text)
         elif type == 'Text':
-            return QtGui.QTextEdit()
+            return QtGui.QTextEdit(text)
         elif type == 'Mode':
-            return ModeSelector()
+            return ModeSelector(text)
         else:
-            return QtGui.QLineEdit()
-            
+            return QtGui.QLineEdit(text)
+        
     def select_align(self, align):
         if align == 'Left':
             return QtCore.Qt.AlignLeft
@@ -70,24 +70,18 @@ class MdiDocument(QtGui.QWidget):
     def draw_document(self, template):
         self.grid = QtGui.QGridLayout()
         for item in template:
-            widget = self.select_widget(template[item]['Type'])
+            type = template[item].get('Type')
+            text = template[item].get('Text')
+            widget = self.select_widget(type, text)
             widget.setObjectName(item)
-            
-            if 'Position' in template[item]:
-                pos = template[item]['Position']
-                
-                align = self.select_align(pos['Align'])
-                
-                if 'RowSpan' in pos and 'ColSpan' in pos:
-                    rowspan = pos['RowSpan']
-                    colspan = pos['ColSpan']
-                else:
-                    rowspan = 1
-                    colspan = 1
-                
-                self.grid.addWidget(widget,
-                                    pos['Row'], pos['Col'],
-                                    rowspan, colspan)#, align)
+            pos = template[item].get('Position')
+            if pos is not None:
+                row = pos.get('Row')
+                rowspan = pos.get('RowSpan', 1)
+                col = pos.get('Col')
+                colspan = pos.get('ColSpan', 1)
+                align = self.select_align(pos.get('Align'))
+                self.grid.addWidget(widget, row, col, rowspan, colspan)#, align)
             else:
                 self.grid.addWidget(widget)
         self.setLayout(self.grid)
@@ -103,7 +97,7 @@ class MdiDocument(QtGui.QWidget):
             elif isinstance(child, QtGui.QTextEdit):
                 child.document().setPlainText(content[item])
         self.parentWidget().adjustSize()
-                
+        
     def new(self, template, number):
         self.draw_document(template)
         self.setWindowTitle("[*]document{0}".format(number))
@@ -123,8 +117,8 @@ class MdiDocument(QtGui.QWidget):
         self.draw_document(template)
         self.fill_document(content)
         self.setWindowTitle("[*]"+name)
-      
-      
+
+
 class MainWindow(QtGui.QMainWindow):
     u"""Главное окно программы с MDI и тулбарами.
     
@@ -150,11 +144,12 @@ class MainWindow(QtGui.QMainWindow):
         self.show_modes()
         
         self.setWindowTitle(self.tr("FLAS"))
-        #self.showMaximized()
+        self.showMaximized()
         
     def show_modes(self):
         subwindow = self.create_subwindow()
         modes = self.select_modes()
+        print(modes)
         #modes = self.readfile_dialog("modes.json")
         subwindow.new(self.load_json(modes), self.document_number)
         self.document_number += 1

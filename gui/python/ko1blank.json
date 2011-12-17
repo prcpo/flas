@@ -105,6 +105,7 @@
             "Row": 3,
             "RowSpan": 1
         },
+        "Text": "0001",
         "Type": "DocNumber"
     },
     "nds": {
@@ -115,6 +116,7 @@
             "Row": 8,
             "RowSpan": 1
         },
+        "Text": "Áåç ÍÄÑ",
         "Type": "Sum"
     },
     "numeric_creation_date": {
@@ -125,6 +127,7 @@
             "Row": 3,
             "RowSpan": 1
         },
+        "Text": "11.11.2011",
         "Type": "Date"
     },
     "numeric_sum": {
@@ -138,7 +141,6 @@
         "Type": "Sum"
     },
     "okud": {
-        "DictName": "Accounts",
         "Position": {
             "Align": "Right",
             "Col": 0,
@@ -146,6 +148,7 @@
             "Row": 0,
             "RowSpan": 1
         },
+        "Text": "0310001",
         "Type": "Label"
     },
     "organisation_name": {
@@ -160,8 +163,6 @@
         "Type": "Dictionary"
     },
     "organisation_okpo": {
-        "Function": "GetOkpo",
-        "Object": "organisationName",
         "Position": {
             "Align": "Right",
             "Col": 3,
@@ -169,6 +170,7 @@
             "Row": 1,
             "RowSpan": 1
         },
+        "Text": "12345678"
         "Type": "Label"
     },
     "reason": {
