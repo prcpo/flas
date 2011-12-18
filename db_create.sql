@@ -38,9 +38,11 @@ CREATE FUNCTION array_to_json(anyarray) RETURNS text
     AS $_$select '{' || array_to_string($1, ', ') || '}'$_$;
 
 
-CREATE FUNCTION json_element(text, anyelement) RETURNS text
-    LANGUAGE sql
-    AS $_$select '"' || $1 || '": ' || regexp_replace($2,'^([^\{]*[^\}])$',E'"\\1"','g');$_$;
+CREATE OR REPLACE FUNCTION json_element(text, anyelement)
+  RETURNS text LANGUAGE sql 
+	AS
+	$BODY$select '"' || $1 || '": ' || regexp_replace($2::text,'^([^\{]*[^\}])$',E'"\\1"','g');$BODY$;
+
 
 CREATE FUNCTION json_row(VARIADIC text[]) RETURNS text
     LANGUAGE sql
@@ -75,17 +77,27 @@ CREATE OR REPLACE FUNCTION modes_node_children_get(_node_code text DEFAULT ''::t
 			json_element(
 				tree::text,
 				json_row(
-					json_element('Text', lbl),
+					json_element('Text', a.lbl),
 					json_element('Type', 'Mode'::text),
-					json_element('Action', app.actions_get(tree))
+					json_element('Children',
+						exists (
+							select 'x' 
+							from app.modes c 
+							where 
+							c.tree <@ a.tree 
+							and not c.tree = a.tree
+						)
+					),			
+					json_element('Actions', app.actions_get(a.tree))
 				)
 			)
 			from
-			app.modes
+			app.modes a
 			where
-			tree <@ text2ltree(COALESCE($1,''))
+			a.tree <@ text2ltree(COALESCE($1,''))
 			and 
-			nlevel(tree) = nlevel(text2ltree(COALESCE($1,'')))+1
+			nlevel(a.tree) = nlevel(text2ltree(COALESCE($1,'')))+1
+
 	)
 );
 $_$;
