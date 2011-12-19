@@ -37,11 +37,22 @@ CREATE FUNCTION array_to_json(anyarray) RETURNS text
     LANGUAGE sql
     AS $_$select '{' || array_to_string($1, ', ') || '}'$_$;
 
+CREATE OR REPLACE FUNCTION json_value(text)
+  RETURNS text LANGUAGE sql AS
+	$BODY$select regexp_replace($1,'^([^\{]*[^\}])$',E'"\\1"','g')$BODY$;
+
+CREATE OR REPLACE FUNCTION json_value(boolean)
+  RETURNS text LANGUAGE sql AS
+	'select $1::text';
+
+CREATE OR REPLACE FUNCTION json_value(integer)
+  RETURNS text LANGUAGE sql AS
+	'select $1::text';
 
 CREATE OR REPLACE FUNCTION json_element(text, anyelement)
   RETURNS text LANGUAGE sql 
 	AS
-	$BODY$select '"' || $1 || '": ' || regexp_replace($2::text,'^([^\{]*[^\}])$',E'"\\1"','g');$BODY$;
+	$BODY$select '"' || $1 || '": ' || json_value($2);$BODY$;
 
 
 CREATE FUNCTION json_row(VARIADIC text[]) RETURNS text
