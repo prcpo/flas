@@ -12,21 +12,39 @@ from PySide import QtCore, QtGui, QtSql
 import simplejson as json
 
 
-class ModeWidget(QtGui.QPushButton):
-    """Виджет выбора режима"""
+class ModesWidget(QtGui.QWidget):
+    u"""Виджет выбора режима"""
 
-    def __init__(self, text = None):
-        super(ModeWidget, self).__init__()
+    def __init__(self, template):
+        super(ModesWidget, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
-        self.setText(text)
-        
+        self.draw_widgets(template)
+    
+    def draw_widgets(self, template):
+        self.grid = QtGui.QGridLayout()
+        tree = QtGui.QTreeWidget()
+        tree.setColumnCount(1)
+        for item in template:
+            type = template[item].get('Type')
+            text = template[item].get('Text')
+            actions = template[item].get('Action')
+            widget = QtGui.QPushButton(text)
+            mode = QtGui.QTreeWidgetItem()
+            mode.setText(0, text)
+            tree.addTopLevelItem(mode)
+            widget.setObjectName(item)
+            self.grid.addWidget(widget)
+        self.grid.addWidget(tree)
+        self.setLayout(self.grid)
+        #self.adjustSize()
+
 
 class DictionaryWidget(QtGui.QComboBox):
-    """Виджет со справочником"""
+    u"""Виджет со справочником"""
 
-    def __init__(self, text = None):
+    def __init__(self, text=None):
         super(DictionaryWidget, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -48,7 +66,7 @@ class MdiDocument(QtGui.QWidget):
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-    def select_widget(self, type, text = None):
+    def select_widget(self, type=None, text=None, actions=None):
         if type == 'Dictionary':
             return DictionaryWidget(text)
         elif type == 'Label':
@@ -61,12 +79,10 @@ class MdiDocument(QtGui.QWidget):
             return QtGui.QLineEdit(text)
         elif type == 'Text':
             return QtGui.QTextEdit(text)
-        elif type == 'Mode':
-            return ModeWidget(text)
         else:
             return QtGui.QLineEdit(text)
         
-    def select_align(self, align):
+    def select_align(self, align=None):
         if align == 'Left':
             return QtCore.Qt.AlignLeft
         elif align == 'Right':
@@ -76,12 +92,13 @@ class MdiDocument(QtGui.QWidget):
         else:
             return QtCore.Qt.AlignLeft
         
-    def draw_document(self, template):
+    def draw_widgets(self, template):
         self.grid = QtGui.QGridLayout()
         for item in template:
             type = template[item].get('Type')
             text = template[item].get('Text')
-            widget = self.select_widget(type, text)
+            actions = template[item].get('Action')
+            widget = self.select_widget(type, text, actions)
             widget.setObjectName(item)
             pos = template[item].get('Position')
             if pos is not None:
@@ -96,7 +113,7 @@ class MdiDocument(QtGui.QWidget):
         self.setLayout(self.grid)
         self.parentWidget().adjustSize()
 
-    def fill_document(self, content):
+    def fill_widgets(self, content):
         for item in content:
             child = self.findChild(QtGui.QWidget, item)
             if isinstance(child, (QtGui.QLabel, QtGui.QLineEdit)):
@@ -108,7 +125,7 @@ class MdiDocument(QtGui.QWidget):
         self.parentWidget().adjustSize()
         
     def new(self, template, number):
-        self.draw_document(template)
+        self.draw_widgets(template)
         self.setWindowTitle("[*]document{0}".format(number))
         
     def save(self):
@@ -123,8 +140,8 @@ class MdiDocument(QtGui.QWidget):
         return data
     
     def open(self, template, content, name):
-        self.draw_document(template)
-        self.fill_document(content)
+        self.draw_widgets(template)
+        self.fill_widgets(content)
         self.setWindowTitle("[*]"+name)
 
 
@@ -136,7 +153,7 @@ class MainWindow(QtGui.QMainWindow):
     
     """
     
-    def __init__(self, parent=None):
+    def __init__(self, database):
         super(MainWindow, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -144,36 +161,25 @@ class MainWindow(QtGui.QMainWindow):
         self.mdi = QtGui.QMdiArea()
         self.setCentralWidget(self.mdi)
 
+        self.db = database
         self.document_number = 1
+        
         self.create_actions()
         self.create_menus()
         self.create_toolbars()
         self.create_statusbar()
-        self.connect_database()
         self.show_modes()
         
         self.setWindowTitle(self.tr("FLAS"))
         self.showMaximized()
         
     def show_modes(self):
-        subwindow = self.create_subwindow()
-        modes = self.select_modes()
-        print(modes)
-        #modes = self.readfile_dialog("modes.json")
-        subwindow.new(self.load_json(modes), self.document_number)
-        self.document_number += 1
-        subwindow.show()
+        modes = self.get_modes()
+        mode_selector = ModesWidget(self.load_json(modes))
+        self.mdi.addSubWindow(mode_selector)
         self.statusBar().showMessage("Modes")
-        
-    def connect_database(self):
-        self.db = QtSql.QSqlDatabase.addDatabase("QPSQL")
-        self.db.setHostName("localhost")
-        self.db.setDatabaseName("flas")
-        self.db.setUserName("postgres")
-        self.db.setPassword("postgres")
-        self.db.open()
-        
-    def select_modes(self):
+                
+    def get_modes(self):
         query = QtSql.QSqlQuery(self.db)
         query.exec_("SELECT app.modes_node_children_get()")
         query.next()
@@ -186,8 +192,8 @@ class MainWindow(QtGui.QMainWindow):
         return json.dumps(data, sort_keys=True, indent=4 * ' ')
         
     def new(self):
-        subwindow = self.create_subwindow()
         blank = self.readfile_dialog("ko1blank.json")
+        subwindow = self.create_subwindow()
         subwindow.new(self.load_json(blank), self.document_number)
         self.document_number += 1
         subwindow.show()
@@ -292,13 +298,26 @@ class MainWindow(QtGui.QMainWindow):
         self.statusBar().showMessage("Ready")
 
 
+def connect_database(config):
+    db = QtSql.QSqlDatabase.addDatabase("QPSQL")
+    db.setHostName(config.get('hostname'))
+    db.setDatabaseName(config.get('database'))
+    db.setUserName(config.get('username'))
+    db.setPassword(config.get('password'))
+    db.open()
+    return db
+
+        
 if __name__ == "__main__":
     translator = QtCore.QTranslator()
     translator.load('translations/ru_RU')
     app = QtGui.QApplication(sys.argv)
     app.installTranslator(translator)
     
-    mainwindow = MainWindow()
+    config_file = open('config.json')
+    config = json.load(config_file)
+    db = connect_database(config)
+    mainwindow = MainWindow(db)
     mainwindow.show()
     
     sys.exit(app.exec_())
