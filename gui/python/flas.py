@@ -14,31 +14,45 @@ import simplejson as json
 
 class ModesWidget(QtGui.QWidget):
     u"""Виджет выбора режима"""
-
+    
+    
+    expanded = QtCore.Signal(str)
+    
     def __init__(self, template):
         super(ModesWidget, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
-        self.draw_widgets(template)
-    
-    def draw_widgets(self, template):
+        self.tree = QtGui.QTreeWidget()
+        self.tree.itemClicked.connect(self.mode_expanded)
+        self.tree.setHeaderHidden(True)
+        self.tree.setColumnCount(3)
+        self.tree.hideColumn(1)
+        self.tree.hideColumn(2)
+        
         self.grid = QtGui.QGridLayout()
-        tree = QtGui.QTreeWidget()
-        tree.setColumnCount(1)
-        for item in template:
-            type = template[item].get('Type')
-            text = template[item].get('Text')
-            actions = template[item].get('Action')
-            widget = QtGui.QPushButton(text)
-            mode = QtGui.QTreeWidgetItem()
-            mode.setText(0, text)
-            tree.addTopLevelItem(mode)
-            widget.setObjectName(item)
-            self.grid.addWidget(widget)
-        self.grid.addWidget(tree)
+        self.grid.addWidget(self.tree)
+        
+        self.populate_tree(template, self.tree)
         self.setLayout(self.grid)
-        #self.adjustSize()
+    
+    def populate_tree(self, submodes, mode):
+        if mode is not self.tree:
+            mode, = self.tree.findItems(mode, QtCore.Qt.MatchExactly, 1)
+            
+        for item in submodes:
+            type = submodes[item].get('Type')
+            text = submodes[item].get('Text')
+            #actions = submodes[item].get('Action')
+            children = str(submodes[item].get('Children'))
+            
+            submode = QtGui.QTreeWidgetItem(mode, (text, item, children))
+
+    def mode_expanded(self, item, column=0):
+        if item.text(2) == 'True':
+            self.expanded.emit(item.text(1))
+            item.setExpanded(True)
+            item.setText(2, 'False')
 
 
 class DictionaryWidget(QtGui.QComboBox):
@@ -149,7 +163,7 @@ class MainWindow(QtGui.QMainWindow):
     u"""Главное окно программы с MDI и тулбарами.
     
     Оперирует окнами, приводит полученные извне данные в подходящий для них
-    формат. Подключается к базе данных, забирает из неё данные.
+    формат. Забирает из данные из базы.
     
     """
     
@@ -174,27 +188,29 @@ class MainWindow(QtGui.QMainWindow):
         self.showMaximized()
         
     def show_modes(self):
-        modes = self.get_modes()
-        mode_selector = ModesWidget(self.load_json(modes))
+        submodes = self.get_submodes()
+        mode_selector = ModesWidget(json.loads(submodes))
         self.mdi.addSubWindow(mode_selector)
+        mode_selector.expanded.connect(self.expand_mode)
         self.statusBar().showMessage("Modes")
-                
-    def get_modes(self):
+        
+    def expand_mode(self, mode):
+        submodes = self.get_submodes(mode)
+        self.sender().populate_tree(json.loads(submodes), mode)
+        
+    def get_submodes(self, mode=''):
         query = QtSql.QSqlQuery(self.db)
-        query.exec_("SELECT app.modes_node_children_get()")
+        query.exec_("SELECT app.modes_node_children_get('{0}')".format(mode))
         query.next()
         return query.value(0)
         
-    def load_json(self, string):
-        return json.loads(string)
-        
     def dump_json(self, data):
-        return json.dumps(data, sort_keys=True, indent=4 * ' ')
+        return json.dumps(data, sort_keys=True, indent=4*' ')
         
     def new(self):
         blank = self.readfile_dialog("ko1blank.json")
         subwindow = self.create_subwindow()
-        subwindow.new(self.load_json(blank), self.document_number)
+        subwindow.new(json.loads(blank), self.document_number)
         self.document_number += 1
         subwindow.show()
         self.statusBar().showMessage("New")
@@ -203,8 +219,8 @@ class MainWindow(QtGui.QMainWindow):
         blank = self.readfile_dialog("ko1blank.json")
         document = self.readfile_dialog("ko1document.json")
         subwindow = self.create_subwindow()
-        subwindow.open(self.load_json(blank),
-                       self.load_json(document), "ko1document.json")
+        subwindow.open(json.loads(blank),
+                       json.loads(document), "ko1document.json")
         subwindow.show()
         self.statusBar().showMessage("Open")
         #subwindow.close()
@@ -256,17 +272,17 @@ class MainWindow(QtGui.QMainWindow):
 
         self.open_act = QtGui.QAction("&Open...", self)
         self.open_act.setShortcut("Ctrl+O")
-        self.open_act.setStatusTip(self.tr("Open an existing file"))
+        self.open_act.setStatusTip("Open an existing file")
         self.open_act.triggered.connect(self.open)
 
         self.save_act = QtGui.QAction("&Save", self)
         self.save_act.setShortcut("Ctrl+S")
-        self.save_act.setStatusTip(self.tr("Save the document to disk"))
+        self.save_act.setStatusTip("Save the document to disk")
         self.save_act.triggered.connect(self.save)
 
         self.exit_act = QtGui.QAction("E&xit", self)
         self.exit_act.setShortcut("Ctrl+Q")
-        self.exit_act.setStatusTip(self.tr("Exit the application"))
+        self.exit_act.setStatusTip("Exit the application")
         self.exit_act.triggered.connect(self.close)
 
         self.separator_act = QtGui.QAction(self)
@@ -307,7 +323,7 @@ def connect_database(config):
     db.open()
     return db
 
-        
+
 if __name__ == "__main__":
     translator = QtCore.QTranslator()
     translator.load('translations/ru_RU')
