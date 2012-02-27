@@ -1,3 +1,4 @@
+{%RunWorkingDir /mnt/data/projects/flas.work}
 unit main;
 
 {$mode objfpc}{$H+}
@@ -6,15 +7,17 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  PairSplitter, StdCtrls, Menus, ActnList, StdActns, ExtCtrls, fpjson,
-  jsonparser, pqconnection, sqldb;
+  PairSplitter, StdCtrls, Menus, ActnList, StdActns, ExtCtrls, Buttons, EditBtn,
+  fpjson, jsonparser, pqconnection, sqldb, types;
 
 type
 
   { TMainForm }
 
   TMainForm = class(TForm)
+    NotesHide: TAction;
     Memo1: TMemo;
+    Notes: TMemo;
     PageSaveClose: TAction;
     PageClose: TAction;
     DBConn: TPQConnection;
@@ -28,7 +31,6 @@ type
     ShowConnectProperties: TAction;
     ActionList: TActionList;
     FileExit: TFileExit;
-    Notes: TMemo;
     SplitterVertical: TPairSplitter;
     SplitterHorizontal: TPairSplitter;
     PairSplitterSide1: TPairSplitterSide;
@@ -42,24 +44,32 @@ type
     ToolButtonClose: TToolButton;
     ToolButtonSave: TToolButton;
     Navigator: TTreeView;
-    procedure DBConnAfterConnect(Sender: TObject);
+    DebugTrackBar: TTrackBar;
     procedure FormCreate(Sender: TObject);
+    procedure Label1Click(Sender: TObject);
     procedure Memo1Change(Sender: TObject);
+    procedure NotesHideExecute(Sender: TObject);
     procedure PageCloseExecute(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure PageSaveCloseExecute(Sender: TObject);
     procedure PageSaveExecute(Sender: TObject);
+    procedure PageSheetDBContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure ShowConnectPropertiesExecute(Sender: TObject);
     procedure PageToolBarClick(Sender: TObject);
+    procedure CreateNewDB(Sender: TObject);
   private
     { private declarations }
     function GetParamObjectFromJSON(J: TJSONData; S: String) : String;
     function CreateFromJSONLabeledEdit(ParentObj: TObject;
              LastControl: TControl; Nm: String; J: TJSONData): TControl;
+    function CreateFromJSONCheckBox(ParentObj: TObject;
+             LastControl: TControl; Nm: String; J: TJSONData): TControl;
     procedure ShowStatus(S: String);
     function StringToJSON(S: String): TJSONData;
     function GetJSONFromDB(SQL: String): TJSONData;
     procedure CreateNodeFromJSON(Tree: TTreeNodes; Node: TTreeNode; J: TJSONData);
+    procedure AfterDBConnect(Sender: TObject);
   public
     { public declarations }
     procedure ShowPage(N, C, JSON: String);
@@ -86,7 +96,8 @@ const
   PageCfgJSON: String = '{"login":{"Type":"string","Text":"Имя пользователя","Value":"postgres"}, ' +
     '"password":{"Type":"string","Text":"Пароль","Value":"postgres"}, ' +
     '"DBhost":{"Type":"string","Text":"Сервер БД","Value":"localhost"}, '+
-    '"DBName":{"Type":"string","Text":"Имя БД","Value":"flas"}}';
+    '"DBName":{"Type":"string","Text":"Имя БД","Value":"flas"},' +
+    '"DBCreateNew":{"Type":"check","Text":"Создать новую базу данных","Value":false}}';
   PageCfgActionsJSON: String = '{"Actions":{"Save":"internal"},{"OK","internal"}}';
   ConnectStatusOff: String = 'Нет подключения';
 
@@ -116,6 +127,39 @@ begin
 
 end;
 
+procedure TMainForm.CreateNewDB(Sender: TObject);
+var
+  Script: TStringList;
+  Trans: TSQLTransaction;
+begin
+  Script:=TStringList.Create;
+  try
+    DBConn.CreateDB;
+    ShowNote(0,'База данных создана успешно.');
+    Script.LoadFromFile('db_create.sql');
+   except
+     On E : Exception do
+       ShowNote(0,'An Exception occurred when parsing : ' + E.Message);
+   end;
+   Trans := TSQLTransaction.Create(Self);
+   DBConn.Transaction := Trans;
+  DBConn.Connected:=true;
+  ShowNote(1,'Подключено к новой БД.');
+  ShowNote(1,'Создаю структуру базы данных.');
+  DBConn.ExecuteDirect(Script.Text);
+  DBConn.Transaction.CommitRetaining;
+
+  Script.LoadFromFile('init.sql');
+  ShowNote(1,'Заполняю базу первичными данными.');
+  DBConn.ExecuteDirect(Script.Text);
+  DBConn.Transaction.CommitRetaining;
+  ShowNote(1,'Структура базы данных создана успешно.');
+  DBConn.Transaction.EndTransaction;
+  DBConn.Transaction := nil;
+  Trans.Free;
+  Script.Free;
+end;
+
 function TMainForm.CreateFromJSONLabeledEdit(ParentObj: TObject;
   LastControl: TControl; Nm: String; J: TJSONData
   ): TControl;
@@ -126,7 +170,6 @@ begin
     El := TLabeledEdit.Create(Self);
     El.Parent := TWinControl(ParentObj);
     El.Name := Nm;
-    El.Text:='';
     El.EditLabel.Caption := GetParamObjectFromJSON(J, 'Text');
     El.Text:=GetParamObjectFromJSON(J, 'Value');
     El.LabelPosition:=lpRight;
@@ -134,6 +177,24 @@ begin
     Result := El;
   finally
   end;
+end;
+
+function TMainForm.CreateFromJSONCheckBox(ParentObj: TObject;
+  LastControl: TControl; Nm: String; J: TJSONData): TControl;
+var
+  El: TCheckBox;
+begin
+  try
+    El := TCheckBox.Create(Self);
+    El.Parent := TWinControl(ParentObj);
+    El.Name := Nm;
+    El.Caption := GetParamObjectFromJSON(J, 'Text');
+    El.Checked := (GetParamObjectFromJSON(J, 'Value') = 'true');
+    El.AnchorToNeighbour(akTop, 0, LastControl);
+    Result := El;
+  finally
+  end;
+
 end;
 
 procedure TMainForm.ShowStatus(S: String);
@@ -148,17 +209,17 @@ function TMainForm.StringToJSON(S: String): TJSONData;
   begin
     Try
       J:=P.Parse;
-        ShowNote(20,'Parse succesful. Dumping JSON data : ');
+        ShowNote(10,'Parse succesful. Dumping JSON data : ');
         If Assigned(J) then
           begin
-            ShowNote(20,'Returned JSON structure has class : ' + J.ClassName);
+            ShowNote(10,'Returned JSON structure has class : ' + J.ClassName);
             Result := J;
           end
         else
-          ShowNote(20,'No JSON data available');
+          ShowNote(10,'No JSON data available');
     except
       On E : Exception do
-        ShowNote(20,'An Exception occurred when parsing : ' + E.Message);
+        ShowNote(10,'An Exception occurred when parsing : ' + E.Message);
     end;
   end;
 
@@ -181,22 +242,24 @@ var
   Qry: TSQLQuery;
   Trans: TSQLTransaction;
 begin
-  ShowNote(20,'Запрос к БД: '+ SQL);
+  ShowNote(10,'Запрос к БД: '+ SQL);
+  Qry := TSQLQuery.Create(Self);
+  Trans := TSQLTransaction.Create(Self);
   try
-    Qry := TSQLQuery.Create(Self);
-    Trans := TSQLTransaction.Create(Self);
     Qry.SQL.Text:=SQL + ' as J;';
     Trans.DataBase:=DBConn;
     Qry.Transaction:= Trans;
     Trans.StartTransaction;
     Qry.Active:=True;
     S := String(Qry.FieldValues['J']);
-    ShowNote(20,'... вернул: ' + S);
+    ShowNote(10,'... вернул: ' + S);
     Result := StringToJSON(S);
   except
       On E : Exception do
-        ShowNote(20,'An Exception occurred when parsing : ' + E.Message);
+        ShowNote(10,'An Exception occurred when parsing : ' + E.Message);
   end;
+  Trans.Free;
+  Qry.Free;
 end;
 
 procedure TMainForm.CreateNodeFromJSON(Tree: TTreeNodes; Node: TTreeNode;
@@ -208,8 +271,8 @@ var
 begin
   for i := 0 to J.Count-1 do
   begin
-    //ShowNote(20, 'JSON: ' + GetParamObjectFromJSON(J.Items[i], 'Text'));
-    ModesItem.Create;
+    //ShowNote(10, 'JSON: ' + GetParamObjectFromJSON(J.Items[i], 'Text'));
+    //ModesItem.Create;
     ModesItem := J.Items[i];
     if  LowerCase(GetParamObjectFromJSON(J.Items[i], 'Type')) = 'mode' then
       begin
@@ -240,7 +303,7 @@ begin
     begin
       NewTab.Destroy;
       Pager.ActivePage := TTabSheet(Pager.FindChildControl('N'));
-      ShowNote(10, 'Лист не создан. Возврат на существующий: ' + N)
+      ShowNote(9, 'Лист не создан. Возврат на существующий: ' + N)
     end;
    end;
 end;
@@ -256,8 +319,10 @@ end;
 
 procedure TMainForm.ShowNote(L: Integer; C: String);
 begin
-  if Notes.Tag >= L then
+  if DebugTrackBar.Position >= L then begin
     Notes.Lines.Add(C);
+    Notes.Refresh;
+  end;
 end;
 
 procedure TMainForm.CloseAllPages();
@@ -266,7 +331,7 @@ var
 begin
   if Pager.PageList.Count > 0 then
     begin
-      ShowNote(20, 'Подключаюсь заново. Будет закрыто листов: ' + IntToStr(Pager.PageList.Count));
+      ShowNote(10, 'Подключаюсь заново. Будет закрыто листов: ' + IntToStr(Pager.PageList.Count));
       for i := Pager.PageList.Count-1 downto 0 do
       begin
         ClosePage(Pager.Page[i]);
@@ -281,7 +346,7 @@ var
 begin
   Navigator.Items.Clear;
   S := 'select modes_node_children_get()';
-  ShowNote(20,'Запрос навигатора: ' + S);
+  ShowNote(10,'Запрос навигатора: ' + S);
   J := GetJSONFromDB(S);
   CreateNodeFromJSON(Navigator.Items, nil, J);
 end;
@@ -304,19 +369,21 @@ procedure TMainForm.CreatePageControls(Sheet: TTabSheet; JSON: String);
       begin
         OName := TJSONObject(J).Names[i];
         OType := GetParamObjectFromJSON(J.Items[i], 'Type');
-        ShowNote(20,'Item #' + IntToStr(i) + ': ' + Oname
+        ShowNote(10,'Item #' + IntToStr(i) + ': ' + Oname
           + ' = ' + J.Items[i].AsJSON);
 
         if not (OType = '') then
         begin
-          ShowNote(20, 'Type: ' + Otype);
+          ShowNote(10, 'Type: ' + Otype);
           if LowerCase(OType) = 'string' then
             LastControl := CreateFromJSONLabeledEdit(ParentObj, LastControl, OName, J.Items[i]);
+          if LowerCase(OType) = 'check' then
+            LastControl := CreateFromJSONCheckBox(ParentObj, LastControl, OName, J.Items[i]);
         end;
       end;
     except
       On E : Exception do
-        ShowNote(20,'An Exception occurred when parsing : ' + E.Message);
+        ShowNote(10,'An Exception occurred when parsing : ' + E.Message);
     end;
   end;
 
@@ -327,7 +394,7 @@ procedure TMainForm.CreatePageControls(Sheet: TTabSheet; JSON: String);
   end;
 
 begin
-  ShowNote(20,'JSON: ' + JSON);
+  ShowNote(10,'JSON: ' + JSON);
   ParseString(JSON);
 end;
 
@@ -346,16 +413,19 @@ procedure TMainForm.PageSaveExecute(Sender: TObject);
 begin
   if Pager.ActivePage.Name = PageCfgName then
     begin
-      try
-        with DBConn do begin
+      with DBConn do begin
           Connected:=false;
           UserName:=TEdit(Pager.ActivePage.FindChildControl('login')).Text;
           Password:=TEdit(Pager.ActivePage.FindChildControl('password')).Text;
           HostName:=TEdit(Pager.ActivePage.FindChildControl('DBhost')).Text;
           DatabaseName:=TEdit(Pager.ActivePage.FindChildControl('DBName')).Text;
-          Connected:=True;
-        end;
-        ShowNote(10,'Подключено к БД');
+      end;
+      if TCheckBox(Pager.ActivePage.FindChildControl('DBCreateNew')).Checked then
+        CreateNewDB(Sender);
+      try
+        DBConn.Connected:=True;
+        ShowNote(9,'Подключено к БД');
+        AfterDBConnect(Sender);
       except
         On E : Exception do begin
           ShowNote(1,'An Exception occurred when parsing : ' + E.Message);
@@ -365,13 +435,19 @@ begin
     end;
 end;
 
+procedure TMainForm.PageSheetDBContextPopup(Sender: TObject; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+
+end;
+
 procedure TMainForm.PageCloseExecute(Sender: TObject);
 begin
     if Pager.PageCount > 0 then
        ClosePage(Pager.ActivePage);
 end;
 
-procedure TMainForm.DBConnAfterConnect(Sender: TObject);
+procedure TMainForm.AfterDBConnect(Sender: TObject);
 begin
   ShowStatus('Подключено: ' + DBConn.UserName
           + '@' + DBConn.HostName + '/' + DBConn.DatabaseName);
@@ -384,9 +460,20 @@ begin
   ShowConnectPropertiesExecute(Sender);
 end;
 
+procedure TMainForm.Label1Click(Sender: TObject);
+begin
+
+end;
+
 procedure TMainForm.Memo1Change(Sender: TObject);
 begin
 
+end;
+
+procedure TMainForm.NotesHideExecute(Sender: TObject);
+begin
+  SplitterVertical.Position := SplitterVertical.Height;
+  SplitterVertical.UpdatePosition;
 end;
 
 end.

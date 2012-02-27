@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 425
+  Left = 518
   Height = 540
-  Top = 148
+  Top = 157
   Width = 740
   ActiveControl = Navigator
   Align = alClient
@@ -85,17 +85,17 @@ object MainForm: TMainForm
             TabOrder = 0
             OnClick = PageToolBarClick
             object ToolButtonSave: TToolButton
-              Left = 1
+              Left = 47
               Top = 2
               Action = PageSave
             end
             object ToolButtonClose: TToolButton
-              Left = 24
+              Left = 1
               Top = 2
               Action = PageClose
             end
             object ToolButtonOK: TToolButton
-              Left = 47
+              Left = 24
               Top = 2
               Action = PageSaveClose
             end
@@ -147,17 +147,31 @@ object MainForm: TMainForm
       Width = 740
       ClientWidth = 740
       ClientHeight = 54
-      object Notes: TMemo
-        Tag = 10
+      object DebugTrackBar: TTrackBar
         Left = 0
         Height = 54
+        Hint = 'Уровень отладочной информации'
         Top = 0
-        Width = 740
-        Align = alClient
-        HideSelection = False
-        ReadOnly = True
-        ScrollBars = ssAutoBoth
+        Width = 50
+        Orientation = trVertical
+        Position = 0
+        Reversed = True
+        ScalePos = trLeft
+        TickStyle = tsManual
+        Align = alLeft
+        DragMode = dmAutomatic
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
+      end
+      object Notes: TMemo
+        Left = 50
+        Height = 54
+        Top = 0
+        Width = 690
+        Align = alClient
+        ScrollBars = ssAutoBoth
+        TabOrder = 1
       end
     end
   end
@@ -191,6 +205,10 @@ object MainForm: TMainForm
       Caption = 'Со$хранить и закрыть'
       ImageIndex = 1
       OnExecute = PageSaveCloseExecute
+    end
+    object NotesHide: TAction
+      Caption = 'Скрыть о&повещения'
+      OnExecute = NotesHideExecute
     end
   end
   object MainMenu: TMainMenu
@@ -282,7 +300,6 @@ object MainForm: TMainForm
   object DBConn: TPQConnection
     Connected = False
     LoginPrompt = False
-    AfterConnect = DBConnAfterConnect
     KeepConnection = False
     LogEvents = []
     left = 43
