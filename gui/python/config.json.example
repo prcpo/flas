@@ -2,5 +2,6 @@
     "hostname": "localhost",
     "database": "flas",
     "username": "postgres",
-    "password": "postgres"
+    "password": "postgres",
+    "printer": null
 }

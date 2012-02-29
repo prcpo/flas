@@ -1,0 +1,416 @@
+{
+    "title": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 6,
+            "Row": 0,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Унифицированная форма № КО-1\nУтверждена постановлением Госкомстата\nРоссии от 18.08.98 № 88"
+    },
+    "code_table_label": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 1,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Код"
+    },
+    "okud_label": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 2,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Форма по ОКУД"
+    },
+    "okud": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 2,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "0310001"
+    },
+    "organisation_name": {
+        "DictName": "SelfEnterprises",
+        "Position": {
+            "Col": 0,
+            "ColSpan": 4,
+            "Row": 3,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "organisation_okpo_label": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 3,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "по ОКПО"
+    },
+    "organisation_okpo": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 3,
+            "RowSpan": 1
+        },
+        "Type": "Label"
+    },
+    "organisation_name_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 4,
+            "Row": 4,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "(организация)"
+    },
+    "division_name": {
+        "Function": "GetDivisionName",
+        "Object": "creditDivisionCode",
+        "Position": {
+            "Col": 0,
+            "ColSpan": 5,
+            "Row": 5,
+            "RowSpan": 1
+        },
+        "Type": "Label"
+    },
+    "division_code": {
+        "DictName": "Divisions",
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 5,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "division_name_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 5,
+            "Row": 6,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "(структурное подразделение)"
+    },
+    "document_number_label": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 7,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Номер документа"
+    },
+    "numeric_creation_date_label": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 7,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Дата составления"
+    },
+    "title2": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 4,
+            "Row": 8,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР"
+    },
+    "document_number": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 8,
+            "RowSpan": 1
+        },
+        "Type": "Label"
+    },
+    "numeric_creation_date": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 8,
+            "RowSpan": 1
+        },
+        "Type": "Label"
+    },
+    "debit_account_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 9,
+            "RowSpan": 2
+        },
+        "Type": "Label",
+        "Text": "Дебет"
+    },
+    "credit_label": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 3,
+            "Row": 9,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Кредит"
+    },
+    "numeric_sum_label": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 9,
+            "RowSpan": 2
+        },
+        "Type": "Label",
+        "Text": "Сумма, руб. коп."
+    },
+    "destination_code_label": {
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 9,
+            "RowSpan": 2
+        },
+        "Type": "Label",
+        "Text": "Код целевого назначения"
+    },
+    "credit_division_code_label": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 1,
+            "Row": 10,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "код структурного подразделения"
+    },
+    "credit_account_label": {
+        "Position": {
+            "Col": 2,
+            "ColSpan": 1,
+            "Row": 10,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "корреспондирующий счёт, субсчёт"
+    },
+    "credit_code_label": {
+        "Position": {
+            "Col": 3,
+            "ColSpan": 1,
+            "Row": 10,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "код аналитического учёта"
+    },
+    "debit_account": {
+        "DictName": "Accounts",
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "credit_division_code": {
+        "DictName": "Divisions",
+        "Position": {
+            "Col": 1,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "credit_account": {
+        "DictName": "Accounts",
+        "Position": {
+            "Col": 2,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "credit_code": {
+        "DictName": "Codes",
+        "Position": {
+            "Col": 3,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "numeric_sum": {
+        "Position": {
+            "Col": 4,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Sum"
+    },
+    "destination_code": {
+        "DictName": "DestCodes",
+        "Position": {
+            "Col": 5,
+            "ColSpan": 1,
+            "Row": 11,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "received_from_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 12,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Принято от"
+    },
+    "received_from": {
+        "DictName": "Persons",
+        "Position": {
+            "Col": 1,
+            "ColSpan": 5,
+            "Row": 12,
+            "RowSpan": 1
+        },
+        "Type": "Dictionary"
+    },
+    "reason_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 13,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Основание:"
+    },
+    "reason": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 5,
+            "Row": 13,
+            "RowSpan": 1
+        },
+        "Type": "Text"
+    },
+    "alphabetic_sum_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 14,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Сумма"
+    },
+    "alphabetic_sum": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 5,
+            "Row": 14,
+            "RowSpan": 1
+        },
+        "Type": "Sum"
+    },
+    "nds_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 15,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "В том числе"
+    },
+    "nds": {
+        "Position": {
+            "Align": "Left",
+            "Col": 1,
+            "ColSpan": 5,
+            "Row": 15,
+            "RowSpan": 1
+        },
+        "Type": "Sum"
+    },
+    "appendix_label": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 16,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "Приложение"
+    },
+    "appendix": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 5,
+            "Row": 16,
+            "RowSpan": 1
+        },
+        "Type": "Text"
+    },
+    "alphabetic_creation_date_day": {
+        "Position": {
+            "Col": 0,
+            "ColSpan": 1,
+            "Row": 17,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "01"
+    },
+    "alphabetic_creation_date_month": {
+        "Position": {
+            "Col": 1,
+            "ColSpan": 1,
+            "Row": 17,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "января"
+    },
+    "alphabetic_creation_date_year": {
+        "Position": {
+            "Col": 2,
+            "ColSpan": 1,
+            "Row": 17,
+            "RowSpan": 1
+        },
+        "Type": "Label",
+        "Text": "2012"
+    }
+}

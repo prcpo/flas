@@ -9,16 +9,19 @@
 
 import sys
 from PySide import QtCore, QtGui, QtSql
+from PySide.QtCore import QLocale
 import simplejson as json
+from win32com import client
+import zipfile
+import os.path
 
 
 class ModesWidget(QtGui.QWidget):
-    u"""Виджет выбора режима"""
-    
+    """Виджет выбора режима"""
     
     expanded = QtCore.Signal(str)
     
-    def __init__(self, template):
+    def __init__(self, template=None):
         super(ModesWidget, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -33,22 +36,25 @@ class ModesWidget(QtGui.QWidget):
         self.grid = QtGui.QGridLayout()
         self.grid.addWidget(self.tree)
         
-        self.populate_tree(template, self.tree)
+        if template is not None:
+            self.populate_tree(template, self.tree)
         self.setLayout(self.grid)
+        
+    def set_template(self, template):
+        self.populate_tree(template, self.tree)
     
     def populate_tree(self, submodes, mode):
         if mode is not self.tree:
             mode, = self.tree.findItems(mode, QtCore.Qt.MatchExactly, 1)
             
         for item in submodes:
-            type = submodes[item].get('Type')
-            text = submodes[item].get('Text')
+            #type = submodes[item].get('Type')
             #actions = submodes[item].get('Action')
+            text = submodes[item].get('Text')
             children = str(submodes[item].get('Children'))
-            
-            submode = QtGui.QTreeWidgetItem(mode, (text, item, children))
+            QtGui.QTreeWidgetItem(mode, (text, item, children))
 
-    def mode_expanded(self, item, column=0):
+    def mode_expanded(self, item):
         if item.text(2) == 'True':
             self.expanded.emit(item.text(1))
             item.setExpanded(True)
@@ -56,7 +62,7 @@ class ModesWidget(QtGui.QWidget):
 
 
 class DictionaryWidget(QtGui.QComboBox):
-    u"""Виджет со справочником"""
+    """Виджет со спрвочником"""
 
     def __init__(self, text=None):
         super(DictionaryWidget, self).__init__()
@@ -68,7 +74,7 @@ class DictionaryWidget(QtGui.QComboBox):
 
 
 class MdiDocument(QtGui.QWidget):
-    u"""Динамическое окно MDI.
+    """Динамическое окно MDI.
     
     На вход получает словарь с шаблоном интерфейса и словарь с данными для
     заполнения. На выход подаёт словарь с данными из форм.
@@ -80,7 +86,7 @@ class MdiDocument(QtGui.QWidget):
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-    def select_widget(self, type=None, text=None, actions=None):
+    def select_widget(self, type=None, text=None):
         if type == 'Dictionary':
             return DictionaryWidget(text)
         elif type == 'Label':
@@ -111,8 +117,8 @@ class MdiDocument(QtGui.QWidget):
         for item in template:
             type = template[item].get('Type')
             text = template[item].get('Text')
-            actions = template[item].get('Action')
-            widget = self.select_widget(type, text, actions)
+            #actions = template[item].get('Action')
+            widget = self.select_widget(type, text)
             widget.setObjectName(item)
             pos = template[item].get('Position')
             if pos is not None:
@@ -120,8 +126,8 @@ class MdiDocument(QtGui.QWidget):
                 rowspan = pos.get('RowSpan', 1)
                 col = pos.get('Col')
                 colspan = pos.get('ColSpan', 1)
-                align = self.select_align(pos.get('Align'))
-                self.grid.addWidget(widget, row, col, rowspan, colspan)#, align)
+                #align = self.select_align(pos.get('Align'))
+                self.grid.addWidget(widget, row, col, rowspan, colspan)
             else:
                 self.grid.addWidget(widget)
         self.setLayout(self.grid)
@@ -140,7 +146,7 @@ class MdiDocument(QtGui.QWidget):
         
     def new(self, template, number):
         self.draw_widgets(template)
-        self.setWindowTitle("[*]document{0}".format(number))
+        self.setWindowTitle('[*]document{0}'.format(number))
         
     def save(self):
         data = {}
@@ -155,44 +161,75 @@ class MdiDocument(QtGui.QWidget):
     
     def open(self, template, content, name):
         self.draw_widgets(template)
+        current_date = QtCore.QDate.currentDate()
+        content['numeric_creation_date'] = current_date.toString('dd.MM.yyyy')
+        content['alphabetic_creation_date_day'] = current_date.toString('dd')
+        content['alphabetic_creation_date_month'] = current_date.toString('MMMM')
+        content['alphabetic_creation_date_year'] = current_date.toString('yyyy')
         self.fill_widgets(content)
-        self.setWindowTitle("[*]"+name)
+        self.setWindowTitle('[*]'+name)
 
-
+        
 class MainWindow(QtGui.QMainWindow):
-    u"""Главное окно программы с MDI и тулбарами.
+    """Главное окно программы с MDI и тулбарами.
     
     Оперирует окнами, приводит полученные извне данные в подходящий для них
     формат. Забирает из данные из базы.
     
     """
     
-    def __init__(self, database):
+    def __init__(self):
         super(MainWindow, self).__init__()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
         self.mdi = QtGui.QMdiArea()
         self.setCentralWidget(self.mdi)
-
-        self.db = database
-        self.document_number = 1
+        
+        self.configure()
+        self.connect_database(self.config)
         
         self.create_actions()
-        self.create_menus()
+        #self.create_menus()
         self.create_toolbars()
         self.create_statusbar()
-        self.show_modes()
+        #self.show_modes()
+        self.new()
         
-        self.setWindowTitle(self.tr("FLAS"))
+        self.setWindowTitle(self.tr('FLAS'))
         self.showMaximized()
+    
+    def configure(self):
+        config_file = open('config.json')
+        self.config = json.load(config_file)
+        self.printer = self.config.get('printer')
+        self.document_number = 1
+
+    def connect_database(self, config):
+        self.db = QtSql.QSqlDatabase.addDatabase('QPSQL')
+        self.db.setHostName(config.get('hostname'))
+        self.db.setDatabaseName(config.get('database'))
+        self.db.setUserName(config.get('username'))
+        self.db.setPassword(config.get('password'))
+        self.db.open()
+    
+    def create_subwindow(self, subwindow_type):
+        if subwindow_type == 'MdiDocument':
+            subwindow = MdiDocument()
+        elif subwindow_type == 'ModesWidget':
+            subwindow = ModesWidget()
+        else:
+            subwindow = MdiDocument()
+        self.mdi.addSubWindow(subwindow)
+        return subwindow
         
     def show_modes(self):
         submodes = self.get_submodes()
-        mode_selector = ModesWidget(json.loads(submodes))
-        self.mdi.addSubWindow(mode_selector)
+        submodes_json = json.loads(submodes)
+        mode_selector = self.create_subwindow('ModesWidget')
+        mode_selector.set_template(submodes_json)
         mode_selector.expanded.connect(self.expand_mode)
-        self.statusBar().showMessage("Modes")
+        self.statusBar().showMessage('Modes')
         
     def expand_mode(self, mode):
         submodes = self.get_submodes(mode)
@@ -204,95 +241,155 @@ class MainWindow(QtGui.QMainWindow):
         query.next()
         return query.value(0)
         
-    def dump_json(self, data):
-        return json.dumps(data, sort_keys=True, indent=4*' ')
-        
     def new(self):
-        blank = self.readfile_dialog("ko1blank.json")
-        subwindow = self.create_subwindow()
-        subwindow.new(json.loads(blank), self.document_number)
-        self.document_number += 1
+        blank_file = QtCore.QFile('documents/ko1blank.json')
+        blank_file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        instream = QtCore.QTextStream(blank_file)
+        instream.setCodec("UTF-8")
+        blank_json = instream.readAll()
+        blank = json.loads(blank_json)
+        
+        document_file = QtCore.QFile('documents/ko1document.json')
+        document_file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+        instream = QtCore.QTextStream(document_file)
+        instream.setCodec("UTF-8")
+        document_json = instream.readAll()
+        document = json.loads(document_json)
+
+        #for item in document:
+        #    print('Text type: '+repr(type(document[item])))
+        #    print('Text: '+document[item])
+        
+        #blank = self.readfile_dialog()
+        subwindow = self.create_subwindow('MdiDocument')
+        subwindow.open(blank, document, 'Document')
+        
+        #self.document_number += 1
         subwindow.show()
-        self.statusBar().showMessage("New")
+        self.statusBar().showMessage('New')
 
     def open(self):
-        blank = self.readfile_dialog("ko1blank.json")
-        document = self.readfile_dialog("ko1document.json")
-        subwindow = self.create_subwindow()
+        blank = self.readfile_dialog()
+        document = self.readfile_dialog()
+        subwindow = self.create_subwindow('MdiDocument')
         subwindow.open(json.loads(blank),
-                       json.loads(document), "ko1document.json")
+                       json.loads(document), 'ko1document.json')
         subwindow.show()
-        self.statusBar().showMessage("Open")
-        #subwindow.close()
+        self.statusBar().showMessage('Open')
 
-    def readfile_dialog(self, name):
-        filename, filter = QtGui.QFileDialog.getOpenFileName(self, name,
-                                                             ".", name)
+    def readfile_dialog(self):
+        filename, filter = QtGui.QFileDialog.getOpenFileName(self, dir='.')
         file = QtCore.QFile(filename)
         if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
             return None
         instream = QtCore.QTextStream(file)
+        instream.setCodec("UTF-8")
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-        string = instream.readAll()
+        data = instream.readAll()
         QtGui.QApplication.restoreOverrideCursor()
-        return string
+        return data
         
     def save(self):
-        data = self.mdi.activeSubWindow().widget().save()
-        string = self.dump_json(data)
-        self.writefile_dialog("ko1document.json", string)
-        self.statusBar().showMessage("Save")
+        content = self.mdi.activeSubWindow().widget().save()
+        data = json.dumps(content, sort_keys=True, indent=4*' ')
+        self.writefile_dialog(data)
+        self.statusBar().showMessage('Save')
         
-    def writefile_dialog(self, name, string):
-        filename, filter = QtGui.QFileDialog.getSaveFileName(self, name,
-                                                             ".", name)
+    def writefile_dialog(self, data):
+        filename, filter = QtGui.QFileDialog.getSaveFileName(self, dir='.')
         file = QtCore.QFile(filename)
         if not file.open(QtCore.QFile.WriteOnly | QtCore.QFile.Text):
             return False
         outstream = QtCore.QTextStream(file)
+        instream.setCodec("UTF-8")
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-        outstream << string
+        outstream << data
         QtGui.QApplication.restoreOverrideCursor()
         return True
 
-    def about(self):
-        QtGui.QMessageBox.about(self, self.tr("About"),
-                                self.tr("<b>FLAS</b>"))
+    def printfile(self):
+        if self.printer is None:
+            self.printer_dialog()
+        
+        content = self.mdi.activeSubWindow().widget().save()
+        self.fill_blank(content)
 
-    def create_subwindow(self):
-        subwindow = MdiDocument()
-        self.mdi.addSubWindow(subwindow)
-        return subwindow
+        filename = os.path.abspath('documents/ko1document.odt')
+
+        word = client.Dispatch('Word.Application')
+        if filename is not None:
+            word.Documents.Open(filename)
+            word.ActivePrinter = self.printer
+            word.ActiveDocument.PrintOut()
+        
+        if not word.BackgroundPrintingStatus:
+            word.ActiveDocument.Close()
+            word.Quit()
+        
+    def printer_dialog(self):
+        printer = QtGui.QPrinter()
+        dialog = QtGui.QPrintDialog(printer, self)
+        dialog.accepted.connect(self.set_printer)
+        dialog.exec_()
+        
+    def set_printer(self, printer):
+        self.printer = printer.printerName()
+        
+    def fill_blank(self, document):
+        compression = zipfile.ZIP_DEFLATED
+        odf = {}
+        
+        with zipfile.ZipFile('documents/ko1blank.odt') as file:
+            namelist = file.namelist()
+            for name in namelist:
+                odf[name] = file.read(name).decode('utf-8')
+
+        document_sorted = sorted(document.keys(), key=len, reverse=True)
+
+        for item in document_sorted:
+            odf['content.xml'] = odf['content.xml'].replace(item, document[item])
+
+        with zipfile.ZipFile('documents/ko1document.odt', 'w') as file:
+            for name in namelist:
+                file.writestr(name, odf[name].encode('utf-8'), compression)
+        
+    def about(self):
+        QtGui.QMessageBox.about(self, self.tr('About'),
+                                self.tr('<b>FLAS</b>'))
 
     def create_actions(self):
-        self.new_act = QtGui.QAction("&New", self)
-        self.new_act.setShortcut("Ctrl+N")
-        self.new_act.setStatusTip(self.tr("Create a new file"))
+        self.new_act = QtGui.QAction('&New', self)
+        self.new_act.setShortcut('Ctrl+N')
+        self.new_act.setStatusTip(self.tr('Create a new file'))
         self.new_act.triggered.connect(self.new)
 
-        self.open_act = QtGui.QAction("&Open...", self)
-        self.open_act.setShortcut("Ctrl+O")
-        self.open_act.setStatusTip("Open an existing file")
+        self.open_act = QtGui.QAction('&Open...', self)
+        self.open_act.setShortcut('Ctrl+O')
+        self.open_act.setStatusTip('Open an existing file')
         self.open_act.triggered.connect(self.open)
 
-        self.save_act = QtGui.QAction("&Save", self)
-        self.save_act.setShortcut("Ctrl+S")
-        self.save_act.setStatusTip("Save the document to disk")
+        self.save_act = QtGui.QAction(self.tr('&Save'), self)
+        self.save_act.setShortcut('Ctrl+S')
+        self.save_act.setStatusTip(self.tr('Save the document to disk'))
         self.save_act.triggered.connect(self.save)
+        
+        self.printfile_act = QtGui.QAction(self.tr('&Print'), self)
+        self.printfile_act.setShortcut('Ctrl+P')
+        self.printfile_act.triggered.connect(self.printfile)
 
-        self.exit_act = QtGui.QAction("E&xit", self)
-        self.exit_act.setShortcut("Ctrl+Q")
-        self.exit_act.setStatusTip("Exit the application")
+        self.exit_act = QtGui.QAction(self.tr('E&xit'), self)
+        self.exit_act.setShortcut('Ctrl+Q')
+        self.exit_act.setStatusTip(self.tr('Exit the application'))
         self.exit_act.triggered.connect(self.close)
 
         self.separator_act = QtGui.QAction(self)
         self.separator_act.setSeparator(True)
 
-        self.about_act = QtGui.QAction("&About", self)
+        self.about_act = QtGui.QAction('&About', self)
         self.about_act.triggered.connect(self.about)
 
     def create_menus(self):
-        self.file_menu = self.menuBar().addMenu(self.tr("&File"))
+        self.file_menu = self.menuBar().addMenu(self.tr('&File'))
         self.file_menu.addAction(self.new_act)
         self.file_menu.addAction(self.open_act)
         self.file_menu.addAction(self.save_act)
@@ -301,39 +398,33 @@ class MainWindow(QtGui.QMainWindow):
 
         self.menuBar().addSeparator()
 
-        self.help_menu = self.menuBar().addMenu(self.tr("&Help"))
+        self.help_menu = self.menuBar().addMenu(self.tr('&Help'))
         self.help_menu.addAction(self.about_act)
 
     def create_toolbars(self):
-        self.file_toolbar = self.addToolBar("File")
+        self.file_toolbar = self.addToolBar('File')
         self.file_toolbar.addAction(self.new_act)
-        self.file_toolbar.addAction(self.open_act)
-        self.file_toolbar.addAction(self.save_act)
+        #self.file_toolbar.addAction(self.open_act)
+        #self.file_toolbar.addAction(self.save_act)
+        #self.file_toolbar.addAction(self.open_html_act)
+        self.file_toolbar.addAction(self.printfile_act)
 
     def create_statusbar(self):
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage('Ready')
 
 
-def connect_database(config):
-    db = QtSql.QSqlDatabase.addDatabase("QPSQL")
-    db.setHostName(config.get('hostname'))
-    db.setDatabaseName(config.get('database'))
-    db.setUserName(config.get('username'))
-    db.setPassword(config.get('password'))
-    db.open()
-    return db
+if __name__ == '__main__':
+    #QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.Russian, QtCore.QLocale.RussianFederation))
 
+    #translator = QtCore.QTranslator()
+    #translator.load('translations/ru_RU')
 
-if __name__ == "__main__":
-    translator = QtCore.QTranslator()
-    translator.load('translations/ru_RU')
     app = QtGui.QApplication(sys.argv)
-    app.installTranslator(translator)
-    
-    config_file = open('config.json')
-    config = json.load(config_file)
-    db = connect_database(config)
-    mainwindow = MainWindow(db)
+
+    #if translator.load('qt_ru', QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)):
+    #app.installTranslator(translator)
+
+    mainwindow = MainWindow()
     mainwindow.show()
     
     sys.exit(app.exec_())
