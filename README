@@ -20,6 +20,9 @@ Sorry, this project is only available in Russian.
 
 Сервер готов.
 
+Если возникают ошибки, выполните, например в pgAdmin, команду:
+ALTER DATABASE _имя_вашей_базы_данных_ SET search_path TO public, ext;
+
 
 FlasLaz (Lazarus GUI)
 ---------------------
