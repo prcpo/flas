@@ -454,7 +454,7 @@ returning id;$_$;
 
 CREATE FUNCTION add(_code text, _parent bigint DEFAULT NULL::bigint) RETURNS bigint
     LANGUAGE sql
-    AS $_$select obj.add($1::text, $2);$_$;
+    AS $_$select obj.add(text2ltree($1), $2);$_$;
 
 
 --
