@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.3
 -- Dumped by pg_dump version 9.1.3
--- Started on 2012-03-09 19:07:13 MSK
+-- Started on 2012-03-10 11:38:49 MSK
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -447,7 +447,7 @@ returning id;$_$;
 
 
 --
--- TOC entry 290 (class 1255 OID 37299)
+-- TOC entry 289 (class 1255 OID 37299)
 -- Dependencies: 11
 -- Name: add(text, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -468,11 +468,13 @@ CREATE FUNCTION get(_id bigint) RETURNS text
     AS $_$select
   json.get(
     json.element('Type', o.code::text) ||
+    (json.element('UID', o.id::text) ||
     array(
               select obj.req_get(id)
               from obj.req
               where obj = o.id
-    )
+              and parent is null
+    ))
   )
 from obj.objects o
 where o.id = $1$_$;
@@ -509,7 +511,7 @@ CREATE FUNCTION get_with_id(_id bigint) RETURNS text
 
 --
 -- TOC entry 281 (class 1255 OID 37301)
--- Dependencies: 602 11 665
+-- Dependencies: 602 665 11
 -- Name: req_add(bigint, ext.ltree, text, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
 
@@ -536,7 +538,7 @@ CREATE FUNCTION req_add(_obj bigint, _code text, _val text, _parent bigint DEFAU
 
 
 --
--- TOC entry 283 (class 1255 OID 37303)
+-- TOC entry 290 (class 1255 OID 37303)
 -- Dependencies: 11 665
 -- Name: req_get(bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -556,6 +558,7 @@ begin
 
   if exists (select 'x' from obj.req where parent = _id or obj = _id) then
     _res := json.get(
+        json.element('UID', _id::text) ||
         array(
           select obj.req_get(id)
           from obj.req
@@ -570,7 +573,7 @@ end;$$;
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 284 (class 1255 OID 37304)
+-- TOC entry 283 (class 1255 OID 37304)
 -- Dependencies: 5
 -- Name: modes_node_children_get(text); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -582,7 +585,7 @@ $_$;
 
 
 --
--- TOC entry 285 (class 1255 OID 37305)
+-- TOC entry 284 (class 1255 OID 37305)
 -- Dependencies: 5
 -- Name: object_add(text); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -594,7 +597,7 @@ CREATE FUNCTION object_add(_code text) RETURNS bigint
 
 --
 -- TOC entry 2191 (class 0 OID 0)
--- Dependencies: 285
+-- Dependencies: 284
 -- Name: FUNCTION object_add(_code text); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -606,7 +609,7 @@ COMMENT ON FUNCTION object_add(_code text) IS 'Создаёт новый объ�
 
 
 --
--- TOC entry 286 (class 1255 OID 37306)
+-- TOC entry 285 (class 1255 OID 37306)
 -- Dependencies: 5
 -- Name: object_get(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -618,7 +621,7 @@ CREATE FUNCTION object_get(_id bigint) RETURNS text
 
 --
 -- TOC entry 2192 (class 0 OID 0)
--- Dependencies: 286
+-- Dependencies: 285
 -- Name: FUNCTION object_get(_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -627,7 +630,7 @@ COMMENT ON FUNCTION object_get(_id bigint) IS 'Возвращает объект
 
 
 --
--- TOC entry 287 (class 1255 OID 37307)
+-- TOC entry 286 (class 1255 OID 37307)
 -- Dependencies: 5
 -- Name: object_req_add(bigint, text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -639,7 +642,7 @@ CREATE FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent bigin
 
 --
 -- TOC entry 2193 (class 0 OID 0)
--- Dependencies: 287
+-- Dependencies: 286
 -- Name: FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -654,8 +657,8 @@ COMMENT ON FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent b
 SET search_path = test, pg_catalog;
 
 --
--- TOC entry 288 (class 1255 OID 37308)
--- Dependencies: 13 665
+-- TOC entry 287 (class 1255 OID 37308)
+-- Dependencies: 665 13
 -- Name: do_test(text, text, text); Type: FUNCTION; Schema: test; Owner: -
 --
 
@@ -686,8 +689,8 @@ end;$$;
 
 
 --
--- TOC entry 289 (class 1255 OID 37309)
--- Dependencies: 665 13
+-- TOC entry 288 (class 1255 OID 37309)
+-- Dependencies: 13 665
 -- Name: test_all(); Type: FUNCTION; Schema: test; Owner: -
 --
 
@@ -730,7 +733,7 @@ CREATE TABLE actions (
 
 --
 -- TOC entry 169 (class 1259 OID 37316)
--- Dependencies: 602 7
+-- Dependencies: 7 602
 -- Name: modes; Type: TABLE; Schema: app; Owner: -
 --
 
@@ -744,7 +747,7 @@ SET search_path = dic, pg_catalog;
 
 --
 -- TOC entry 170 (class 1259 OID 37322)
--- Dependencies: 602 8
+-- Dependencies: 8 602
 -- Name: param_def; Type: TABLE; Schema: dic; Owner: -
 --
 
@@ -757,7 +760,7 @@ CREATE TABLE param_def (
 
 --
 -- TOC entry 171 (class 1259 OID 37328)
--- Dependencies: 2125 2126 2127 602 8
+-- Dependencies: 2125 2126 2127 8 602
 -- Name: param_values; Type: TABLE; Schema: dic; Owner: -
 --
 
@@ -775,7 +778,7 @@ SET search_path = obj, pg_catalog;
 
 --
 -- TOC entry 172 (class 1259 OID 37337)
--- Dependencies: 602 11
+-- Dependencies: 11 602
 -- Name: objects; Type: TABLE; Schema: obj; Owner: -
 --
 
@@ -789,7 +792,7 @@ CREATE TABLE objects (
 
 --
 -- TOC entry 173 (class 1259 OID 37343)
--- Dependencies: 172 11
+-- Dependencies: 11 172
 -- Name: objects_id_seq; Type: SEQUENCE; Schema: obj; Owner: -
 --
 
@@ -816,7 +819,7 @@ ALTER SEQUENCE objects_id_seq OWNED BY objects.id;
 -- Name: objects_id_seq; Type: SEQUENCE SET; Schema: obj; Owner: -
 --
 
-SELECT pg_catalog.setval('objects_id_seq', 4, true);
+SELECT pg_catalog.setval('objects_id_seq', 7, true);
 
 
 --
@@ -830,7 +833,8 @@ CREATE TABLE req (
     obj bigint NOT NULL,
     parent bigint,
     code ext.ltree,
-    val text
+    val text,
+    seq integer
 );
 
 
@@ -958,7 +962,7 @@ CREATE TABLE tests (
 
 --
 -- TOC entry 182 (class 1259 OID 37387)
--- Dependencies: 181 13
+-- Dependencies: 13 181
 -- Name: tests_id_seq; Type: SEQUENCE; Schema: test; Owner: -
 --
 
@@ -1084,7 +1088,9 @@ INSERT INTO objects (id, cmp, parent, code) VALUES (3, NULL, NULL, 'doc.pp');
 -- Data for Name: req; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-INSERT INTO req (id, obj, parent, code, val) VALUES (4, 2, NULL, 'number', '229');
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (4, 2, NULL, 'number', '229', NULL);
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (6, 2, 4, 'req', 'val', NULL);
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (7, 2, 4, 'req2', 'val2', NULL);
 
 
 SET search_path = sec, pg_catalog;
@@ -1238,7 +1244,7 @@ SET search_path = dic, pg_catalog;
 
 --
 -- TOC entry 2141 (class 1259 OID 37412)
--- Dependencies: 171 1534
+-- Dependencies: 1534 171
 -- Name: fki_param_values_param; Type: INDEX; Schema: dic; Owner: -
 --
 
@@ -1298,7 +1304,7 @@ SET search_path = app, pg_catalog;
 
 --
 -- TOC entry 2161 (class 2606 OID 37418)
--- Dependencies: 169 2137 168 1376
+-- Dependencies: 1376 2137 168 169
 -- Name: fk_actions_tree; Type: FK CONSTRAINT; Schema: app; Owner: -
 --
 
@@ -1310,7 +1316,7 @@ SET search_path = dic, pg_catalog;
 
 --
 -- TOC entry 2162 (class 2606 OID 37423)
--- Dependencies: 170 171 1376 2139
+-- Dependencies: 171 1376 170 2139
 -- Name: fk_param_values_param; Type: FK CONSTRAINT; Schema: dic; Owner: -
 --
 
@@ -1322,7 +1328,7 @@ SET search_path = obj, pg_catalog;
 
 --
 -- TOC entry 2163 (class 2606 OID 37428)
--- Dependencies: 176 2152 172
+-- Dependencies: 2152 176 172
 -- Name: fk_objects_cmp; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1352,7 +1358,7 @@ ALTER TABLE ONLY req
 
 --
 -- TOC entry 2166 (class 2606 OID 37443)
--- Dependencies: 174 2150 174
+-- Dependencies: 174 174 2150
 -- Name: fk_req_parent; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1364,7 +1370,7 @@ SET search_path = sec, pg_catalog;
 
 --
 -- TOC entry 2167 (class 2606 OID 37448)
--- Dependencies: 176 2152 177
+-- Dependencies: 2152 177 176
 -- Name: fk_users_company; Type: FK CONSTRAINT; Schema: sec; Owner: -
 --
 
@@ -1372,7 +1378,7 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_company FOREIGN KEY (company) REFERENCES companies(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2012-03-09 19:07:13 MSK
+-- Completed on 2012-03-10 11:38:50 MSK
 
 --
 -- PostgreSQL database dump complete
