@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.3
 -- Dumped by pg_dump version 9.1.3
--- Started on 2012-03-10 11:38:49 MSK
+-- Started on 2012-03-12 15:52:23 MSK
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -21,7 +21,7 @@ CREATE SCHEMA app;
 
 
 --
--- TOC entry 2181 (class 0 OID 0)
+-- TOC entry 2211 (class 0 OID 0)
 -- Dependencies: 7
 -- Name: SCHEMA app; Type: COMMENT; Schema: -; Owner: -
 --
@@ -43,7 +43,7 @@ CREATE SCHEMA dic;
 
 
 --
--- TOC entry 2182 (class 0 OID 0)
+-- TOC entry 2212 (class 0 OID 0)
 -- Dependencies: 8
 -- Name: SCHEMA dic; Type: COMMENT; Schema: -; Owner: -
 --
@@ -60,7 +60,7 @@ CREATE SCHEMA ext;
 
 
 --
--- TOC entry 2183 (class 0 OID 0)
+-- TOC entry 2213 (class 0 OID 0)
 -- Dependencies: 9
 -- Name: SCHEMA ext; Type: COMMENT; Schema: -; Owner: -
 --
@@ -80,7 +80,7 @@ CREATE SCHEMA json;
 
 
 --
--- TOC entry 2184 (class 0 OID 0)
+-- TOC entry 2214 (class 0 OID 0)
 -- Dependencies: 10
 -- Name: SCHEMA json; Type: COMMENT; Schema: -; Owner: -
 --
@@ -97,7 +97,7 @@ CREATE SCHEMA obj;
 
 
 --
--- TOC entry 2185 (class 0 OID 0)
+-- TOC entry 2215 (class 0 OID 0)
 -- Dependencies: 11
 -- Name: SCHEMA obj; Type: COMMENT; Schema: -; Owner: -
 --
@@ -114,7 +114,7 @@ CREATE SCHEMA sec;
 
 
 --
--- TOC entry 2187 (class 0 OID 0)
+-- TOC entry 2217 (class 0 OID 0)
 -- Dependencies: 12
 -- Name: SCHEMA sec; Type: COMMENT; Schema: -; Owner: -
 --
@@ -131,7 +131,7 @@ CREATE SCHEMA test;
 
 
 --
--- TOC entry 2188 (class 0 OID 0)
+-- TOC entry 2218 (class 0 OID 0)
 -- Dependencies: 13
 -- Name: SCHEMA test; Type: COMMENT; Schema: -; Owner: -
 --
@@ -140,7 +140,7 @@ COMMENT ON SCHEMA test IS 'Тесты';
 
 
 --
--- TOC entry 183 (class 3079 OID 11685)
+-- TOC entry 185 (class 3079 OID 11685)
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -148,8 +148,8 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 2189 (class 0 OID 0)
--- Dependencies: 183
+-- TOC entry 2219 (class 0 OID 0)
+-- Dependencies: 185
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
 --
 
@@ -157,7 +157,7 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
 --
--- TOC entry 184 (class 3079 OID 37109)
+-- TOC entry 187 (class 3079 OID 37109)
 -- Dependencies: 9
 -- Name: ltree; Type: EXTENSION; Schema: -; Owner: -
 --
@@ -166,19 +166,37 @@ CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA ext;
 
 
 --
--- TOC entry 2190 (class 0 OID 0)
--- Dependencies: 184
+-- TOC entry 2220 (class 0 OID 0)
+-- Dependencies: 187
 -- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
 
 
+--
+-- TOC entry 186 (class 3079 OID 45294)
+-- Dependencies: 9
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA ext;
+
+
+--
+-- TOC entry 2221 (class 0 OID 0)
+-- Dependencies: 186
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
 SET search_path = app, pg_catalog;
 
 --
--- TOC entry 266 (class 1255 OID 37284)
--- Dependencies: 7 602
+-- TOC entry 269 (class 1255 OID 37284)
+-- Dependencies: 7 617
 -- Name: actions_get(ext.ltree); Type: FUNCTION; Schema: app; Owner: -
 --
 
@@ -201,7 +219,7 @@ CREATE FUNCTION actions_get(ext.ltree) RETURNS text
 
 
 --
--- TOC entry 267 (class 1255 OID 37285)
+-- TOC entry 270 (class 1255 OID 37285)
 -- Dependencies: 7
 -- Name: modes_node_children_get(text); Type: FUNCTION; Schema: app; Owner: -
 --
@@ -243,8 +261,8 @@ $_$;
 SET search_path = dic, pg_catalog;
 
 --
--- TOC entry 268 (class 1255 OID 37286)
--- Dependencies: 8 665
+-- TOC entry 271 (class 1255 OID 37286)
+-- Dependencies: 8 688
 -- Name: param_def_add(text[]); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -256,8 +274,8 @@ end;$$;
 
 
 --
--- TOC entry 269 (class 1255 OID 37287)
--- Dependencies: 665 8 602
+-- TOC entry 272 (class 1255 OID 37287)
+-- Dependencies: 8 688 617
 -- Name: param_def_add(ext.ltree, text[]); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -272,8 +290,8 @@ end;$$;
 
 
 --
--- TOC entry 270 (class 1255 OID 37288)
--- Dependencies: 602 665 8
+-- TOC entry 273 (class 1255 OID 37288)
+-- Dependencies: 8 688 617
 -- Name: param_value_get(ext.ltree, text, integer, date); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -295,8 +313,8 @@ $$;
 
 
 --
--- TOC entry 271 (class 1255 OID 37289)
--- Dependencies: 665 8
+-- TOC entry 274 (class 1255 OID 37289)
+-- Dependencies: 8 688
 -- Name: param_value_get(text, text, integer, date); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -308,8 +326,8 @@ end;$$;
 
 
 --
--- TOC entry 272 (class 1255 OID 37290)
--- Dependencies: 665 8 602
+-- TOC entry 275 (class 1255 OID 37290)
+-- Dependencies: 8 688 617
 -- Name: param_value_set(ext.ltree, anyelement, text, integer, date); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -351,8 +369,8 @@ end;$$;
 
 
 --
--- TOC entry 273 (class 1255 OID 37291)
--- Dependencies: 665 8
+-- TOC entry 276 (class 1255 OID 37291)
+-- Dependencies: 8 688
 -- Name: param_value_set(text, anyelement, text, integer, date); Type: FUNCTION; Schema: dic; Owner: -
 --
 
@@ -366,7 +384,7 @@ end;$$;
 SET search_path = json, pg_catalog;
 
 --
--- TOC entry 274 (class 1255 OID 37292)
+-- TOC entry 277 (class 1255 OID 37292)
 -- Dependencies: 10
 -- Name: element(text, anyelement); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -377,7 +395,7 @@ CREATE FUNCTION element(text, anyelement) RETURNS text
 
 
 --
--- TOC entry 275 (class 1255 OID 37293)
+-- TOC entry 278 (class 1255 OID 37293)
 -- Dependencies: 10
 -- Name: elements(text[]); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -388,7 +406,7 @@ CREATE FUNCTION elements(VARIADIC text[]) RETURNS text
 
 
 --
--- TOC entry 276 (class 1255 OID 37294)
+-- TOC entry 279 (class 1255 OID 37294)
 -- Dependencies: 10
 -- Name: get(anyarray); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -399,7 +417,7 @@ CREATE FUNCTION get(anyarray) RETURNS text
 
 
 --
--- TOC entry 277 (class 1255 OID 37295)
+-- TOC entry 280 (class 1255 OID 37295)
 -- Dependencies: 10
 -- Name: value(text); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -410,7 +428,7 @@ CREATE FUNCTION value(text) RETURNS text
 
 
 --
--- TOC entry 278 (class 1255 OID 37296)
+-- TOC entry 281 (class 1255 OID 37296)
 -- Dependencies: 10
 -- Name: value(boolean); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -421,7 +439,7 @@ CREATE FUNCTION value(boolean) RETURNS text
 
 
 --
--- TOC entry 279 (class 1255 OID 37297)
+-- TOC entry 282 (class 1255 OID 37297)
 -- Dependencies: 10
 -- Name: value(integer); Type: FUNCTION; Schema: json; Owner: -
 --
@@ -434,8 +452,8 @@ CREATE FUNCTION value(integer) RETURNS text
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 280 (class 1255 OID 37298)
--- Dependencies: 602 11
+-- TOC entry 283 (class 1255 OID 37298)
+-- Dependencies: 11 617
 -- Name: add(ext.ltree, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
 
@@ -447,7 +465,7 @@ returning id;$_$;
 
 
 --
--- TOC entry 289 (class 1255 OID 37299)
+-- TOC entry 292 (class 1255 OID 37299)
 -- Dependencies: 11
 -- Name: add(text, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -458,7 +476,7 @@ CREATE FUNCTION add(_code text, _parent bigint DEFAULT NULL::bigint) RETURNS big
 
 
 --
--- TOC entry 292 (class 1255 OID 37300)
+-- TOC entry 296 (class 1255 OID 37300)
 -- Dependencies: 11
 -- Name: get(bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -481,7 +499,7 @@ where o.id = $1$_$;
 
 
 --
--- TOC entry 291 (class 1255 OID 45293)
+-- TOC entry 294 (class 1255 OID 45293)
 -- Dependencies: 11
 -- Name: get_with_id(bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -510,8 +528,8 @@ CREATE FUNCTION get_with_id(_id bigint) RETURNS text
 
 
 --
--- TOC entry 281 (class 1255 OID 37301)
--- Dependencies: 602 665 11
+-- TOC entry 284 (class 1255 OID 37301)
+-- Dependencies: 688 11 617
 -- Name: req_add(bigint, ext.ltree, text, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
 
@@ -527,7 +545,7 @@ end;$$;
 
 
 --
--- TOC entry 282 (class 1255 OID 37302)
+-- TOC entry 285 (class 1255 OID 37302)
 -- Dependencies: 11
 -- Name: req_add(bigint, text, text, bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
@@ -538,8 +556,8 @@ CREATE FUNCTION req_add(_obj bigint, _code text, _val text, _parent bigint DEFAU
 
 
 --
--- TOC entry 290 (class 1255 OID 37303)
--- Dependencies: 11 665
+-- TOC entry 293 (class 1255 OID 37303)
+-- Dependencies: 688 11
 -- Name: req_get(bigint); Type: FUNCTION; Schema: obj; Owner: -
 --
 
@@ -570,10 +588,39 @@ begin
 end;$$;
 
 
+--
+-- TOC entry 295 (class 1255 OID 53486)
+-- Dependencies: 11 621 621
+-- Name: structure_get(text, ext.lquery); Type: FUNCTION; Schema: obj; Owner: -
+--
+
+CREATE FUNCTION structure_get(_code text, _req ext.lquery DEFAULT NULL::ext.lquery) RETURNS text
+    LANGUAGE sql
+    AS $_$select json.get( 
+  array(
+	select
+	json.element(req_code::text,
+	  json.elements(
+	      json.element('Type',req_type::text),
+	      json.element('Text',label),
+	      json.element('Note',note),
+	      json.element('Table',isarray)
+	  )
+	)
+	from
+	obj.descr
+	where
+	obj_code = text2ltree($1)
+	--and
+	--nlevel(req_code)=1
+  )
+)$_$;
+
+
 SET search_path = public, pg_catalog;
 
 --
--- TOC entry 283 (class 1255 OID 37304)
+-- TOC entry 286 (class 1255 OID 37304)
 -- Dependencies: 5
 -- Name: modes_node_children_get(text); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -585,7 +632,7 @@ $_$;
 
 
 --
--- TOC entry 284 (class 1255 OID 37305)
+-- TOC entry 287 (class 1255 OID 37305)
 -- Dependencies: 5
 -- Name: object_add(text); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -596,8 +643,8 @@ CREATE FUNCTION object_add(_code text) RETURNS bigint
 
 
 --
--- TOC entry 2191 (class 0 OID 0)
--- Dependencies: 284
+-- TOC entry 2222 (class 0 OID 0)
+-- Dependencies: 287
 -- Name: FUNCTION object_add(_code text); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -609,7 +656,7 @@ COMMENT ON FUNCTION object_add(_code text) IS 'Создаёт новый объ�
 
 
 --
--- TOC entry 285 (class 1255 OID 37306)
+-- TOC entry 288 (class 1255 OID 37306)
 -- Dependencies: 5
 -- Name: object_get(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -620,8 +667,8 @@ CREATE FUNCTION object_get(_id bigint) RETURNS text
 
 
 --
--- TOC entry 2192 (class 0 OID 0)
--- Dependencies: 285
+-- TOC entry 2223 (class 0 OID 0)
+-- Dependencies: 288
 -- Name: FUNCTION object_get(_id bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -630,7 +677,7 @@ COMMENT ON FUNCTION object_get(_id bigint) IS 'Возвращает объект
 
 
 --
--- TOC entry 286 (class 1255 OID 37307)
+-- TOC entry 289 (class 1255 OID 37307)
 -- Dependencies: 5
 -- Name: object_req_add(bigint, text, text, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
@@ -641,8 +688,8 @@ CREATE FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent bigin
 
 
 --
--- TOC entry 2193 (class 0 OID 0)
--- Dependencies: 286
+-- TOC entry 2224 (class 0 OID 0)
+-- Dependencies: 289
 -- Name: FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent bigint); Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -654,11 +701,32 @@ COMMENT ON FUNCTION object_req_add(_obj bigint, _code text, _val text, _parent b
 4) вышестоящий по иерархии ревизит (необязательно)';
 
 
+--
+-- TOC entry 307 (class 1255 OID 61678)
+-- Dependencies: 5
+-- Name: object_structure_get(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION object_structure_get(_code text) RETURNS text
+    LANGUAGE sql
+    AS $_$select obj.structure_get($1)$_$;
+
+
+--
+-- TOC entry 2225 (class 0 OID 0)
+-- Dependencies: 307
+-- Name: FUNCTION object_structure_get(_code text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION object_structure_get(_code text) IS 'Возвращает структуру объекта (документа, справочника) в формате JSON.
+Параметр - код типа объекта.';
+
+
 SET search_path = test, pg_catalog;
 
 --
--- TOC entry 287 (class 1255 OID 37308)
--- Dependencies: 665 13
+-- TOC entry 290 (class 1255 OID 37308)
+-- Dependencies: 688 13
 -- Name: do_test(text, text, text); Type: FUNCTION; Schema: test; Owner: -
 --
 
@@ -689,8 +757,8 @@ end;$$;
 
 
 --
--- TOC entry 288 (class 1255 OID 37309)
--- Dependencies: 13 665
+-- TOC entry 291 (class 1255 OID 37309)
+-- Dependencies: 688 13
 -- Name: test_all(); Type: FUNCTION; Schema: test; Owner: -
 --
 
@@ -719,7 +787,7 @@ SET default_with_oids = false;
 
 --
 -- TOC entry 168 (class 1259 OID 37310)
--- Dependencies: 7 602
+-- Dependencies: 7 617
 -- Name: actions; Type: TABLE; Schema: app; Owner: -
 --
 
@@ -733,7 +801,7 @@ CREATE TABLE actions (
 
 --
 -- TOC entry 169 (class 1259 OID 37316)
--- Dependencies: 7 602
+-- Dependencies: 7 617
 -- Name: modes; Type: TABLE; Schema: app; Owner: -
 --
 
@@ -747,7 +815,7 @@ SET search_path = dic, pg_catalog;
 
 --
 -- TOC entry 170 (class 1259 OID 37322)
--- Dependencies: 8 602
+-- Dependencies: 8 617
 -- Name: param_def; Type: TABLE; Schema: dic; Owner: -
 --
 
@@ -760,7 +828,7 @@ CREATE TABLE param_def (
 
 --
 -- TOC entry 171 (class 1259 OID 37328)
--- Dependencies: 2125 2126 2127 8 602
+-- Dependencies: 2148 2149 2150 8 617
 -- Name: param_values; Type: TABLE; Schema: dic; Owner: -
 --
 
@@ -777,8 +845,24 @@ CREATE TABLE param_values (
 SET search_path = obj, pg_catalog;
 
 --
+-- TOC entry 184 (class 1259 OID 45313)
+-- Dependencies: 2158 11 617 617 617
+-- Name: descr; Type: TABLE; Schema: obj; Owner: -
+--
+
+CREATE TABLE descr (
+    obj_code ext.ltree NOT NULL,
+    req_code ext.ltree NOT NULL,
+    req_type ext.ltree,
+    isarray boolean DEFAULT false,
+    label text,
+    note text
+);
+
+
+--
 -- TOC entry 172 (class 1259 OID 37337)
--- Dependencies: 11 602
+-- Dependencies: 617 11
 -- Name: objects; Type: TABLE; Schema: obj; Owner: -
 --
 
@@ -805,7 +889,7 @@ CREATE SEQUENCE objects_id_seq
 
 
 --
--- TOC entry 2194 (class 0 OID 0)
+-- TOC entry 2226 (class 0 OID 0)
 -- Dependencies: 173
 -- Name: objects_id_seq; Type: SEQUENCE OWNED BY; Schema: obj; Owner: -
 --
@@ -814,7 +898,7 @@ ALTER SEQUENCE objects_id_seq OWNED BY objects.id;
 
 
 --
--- TOC entry 2195 (class 0 OID 0)
+-- TOC entry 2227 (class 0 OID 0)
 -- Dependencies: 173
 -- Name: objects_id_seq; Type: SEQUENCE SET; Schema: obj; Owner: -
 --
@@ -824,7 +908,7 @@ SELECT pg_catalog.setval('objects_id_seq', 7, true);
 
 --
 -- TOC entry 174 (class 1259 OID 37345)
--- Dependencies: 2129 602 11
+-- Dependencies: 2152 617 11
 -- Name: req; Type: TABLE; Schema: obj; Owner: -
 --
 
@@ -835,6 +919,19 @@ CREATE TABLE req (
     code ext.ltree,
     val text,
     seq integer
+);
+
+
+--
+-- TOC entry 183 (class 1259 OID 45305)
+-- Dependencies: 617 11
+-- Name: types; Type: TABLE; Schema: obj; Owner: -
+--
+
+CREATE TABLE types (
+    code ext.ltree NOT NULL,
+    fn_save text,
+    fn_restore text
 );
 
 
@@ -855,7 +952,7 @@ CREATE SEQUENCE companies_id_seq
 
 
 --
--- TOC entry 2196 (class 0 OID 0)
+-- TOC entry 2228 (class 0 OID 0)
 -- Dependencies: 175
 -- Name: companies_id_seq; Type: SEQUENCE SET; Schema: sec; Owner: -
 --
@@ -865,7 +962,7 @@ SELECT pg_catalog.setval('companies_id_seq', 1, false);
 
 --
 -- TOC entry 176 (class 1259 OID 37354)
--- Dependencies: 2130 12
+-- Dependencies: 2153 12
 -- Name: companies; Type: TABLE; Schema: sec; Owner: -
 --
 
@@ -877,7 +974,7 @@ CREATE TABLE companies (
 
 --
 -- TOC entry 177 (class 1259 OID 37361)
--- Dependencies: 2131 12
+-- Dependencies: 2154 12
 -- Name: users; Type: TABLE; Schema: sec; Owner: -
 --
 
@@ -891,7 +988,7 @@ SET search_path = public, pg_catalog;
 
 --
 -- TOC entry 178 (class 1259 OID 37368)
--- Dependencies: 2124 5
+-- Dependencies: 2147 5
 -- Name: companies; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -903,7 +1000,7 @@ SET search_path = test, pg_catalog;
 
 --
 -- TOC entry 179 (class 1259 OID 37372)
--- Dependencies: 2132 13
+-- Dependencies: 2155 13
 -- Name: results; Type: TABLE; Schema: test; Owner: -
 --
 
@@ -930,7 +1027,7 @@ CREATE SEQUENCE results_id_seq
 
 
 --
--- TOC entry 2197 (class 0 OID 0)
+-- TOC entry 2229 (class 0 OID 0)
 -- Dependencies: 180
 -- Name: results_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
 --
@@ -939,7 +1036,7 @@ ALTER SEQUENCE results_id_seq OWNED BY results.id;
 
 
 --
--- TOC entry 2198 (class 0 OID 0)
+-- TOC entry 2230 (class 0 OID 0)
 -- Dependencies: 180
 -- Name: results_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
@@ -975,7 +1072,7 @@ CREATE SEQUENCE tests_id_seq
 
 
 --
--- TOC entry 2199 (class 0 OID 0)
+-- TOC entry 2231 (class 0 OID 0)
 -- Dependencies: 182
 -- Name: tests_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
 --
@@ -984,7 +1081,7 @@ ALTER SEQUENCE tests_id_seq OWNED BY tests.id;
 
 
 --
--- TOC entry 2200 (class 0 OID 0)
+-- TOC entry 2232 (class 0 OID 0)
 -- Dependencies: 182
 -- Name: tests_id_seq; Type: SEQUENCE SET; Schema: test; Owner: -
 --
@@ -995,7 +1092,7 @@ SELECT pg_catalog.setval('tests_id_seq', 2, true);
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 2128 (class 2604 OID 37389)
+-- TOC entry 2151 (class 2604 OID 37389)
 -- Dependencies: 173 172
 -- Name: id; Type: DEFAULT; Schema: obj; Owner: -
 --
@@ -1006,7 +1103,7 @@ ALTER TABLE ONLY objects ALTER COLUMN id SET DEFAULT nextval('objects_id_seq'::r
 SET search_path = test, pg_catalog;
 
 --
--- TOC entry 2133 (class 2604 OID 37390)
+-- TOC entry 2156 (class 2604 OID 37390)
 -- Dependencies: 180 179
 -- Name: id; Type: DEFAULT; Schema: test; Owner: -
 --
@@ -1015,7 +1112,7 @@ ALTER TABLE ONLY results ALTER COLUMN id SET DEFAULT nextval('results_id_seq'::r
 
 
 --
--- TOC entry 2134 (class 2604 OID 37391)
+-- TOC entry 2157 (class 2604 OID 37391)
 -- Dependencies: 182 181
 -- Name: id; Type: DEFAULT; Schema: test; Owner: -
 --
@@ -1026,114 +1123,167 @@ ALTER TABLE ONLY tests ALTER COLUMN id SET DEFAULT nextval('tests_id_seq'::regcl
 SET search_path = app, pg_catalog;
 
 --
--- TOC entry 2168 (class 0 OID 37310)
+-- TOC entry 2196 (class 0 OID 37310)
 -- Dependencies: 168
 -- Data for Name: actions; Type: TABLE DATA; Schema: app; Owner: -
 --
 
-INSERT INTO actions (tree, action, lbl, func) VALUES ('doc.pay', 'open', '*Список', 'doc_list');
+COPY actions (tree, action, lbl, func) FROM stdin;
+doc.pay	open	*Список	doc_list
+\.
 
 
 --
--- TOC entry 2169 (class 0 OID 37316)
+-- TOC entry 2197 (class 0 OID 37316)
 -- Dependencies: 169
 -- Data for Name: modes; Type: TABLE DATA; Schema: app; Owner: -
 --
 
-INSERT INTO modes (tree, lbl) VALUES ('doc', 'Документы');
-INSERT INTO modes (tree, lbl) VALUES ('dic', 'Справочники');
-INSERT INTO modes (tree, lbl) VALUES ('doc.pay', 'Платёжные поручения');
-INSERT INTO modes (tree, lbl) VALUES ('dic.companies', 'Организации');
+COPY modes (tree, lbl) FROM stdin;
+doc	Документы
+dic	Справочники
+doc.pay	Платёжные поручения
+dic.companies	Организации
+\.
 
 
 SET search_path = dic, pg_catalog;
 
 --
--- TOC entry 2170 (class 0 OID 37322)
+-- TOC entry 2198 (class 0 OID 37322)
 -- Dependencies: 170
 -- Data for Name: param_def; Type: TABLE DATA; Schema: dic; Owner: -
 --
 
-INSERT INTO param_def (tree, lbl, note) VALUES ('defaults', 'Настройки по-умолчанию', NULL);
-INSERT INTO param_def (tree, lbl, note) VALUES ('defaults.company_name', 'Наименование организации по-умолчанию', NULL);
-INSERT INTO param_def (tree, lbl, note) VALUES ('session', 'Параметры текущего сеанса', NULL);
-INSERT INTO param_def (tree, lbl, note) VALUES ('session.work_date', NULL, NULL);
-INSERT INTO param_def (tree, lbl, note) VALUES ('session.active_company', NULL, NULL);
+COPY param_def (tree, lbl, note) FROM stdin;
+defaults	Настройки по-умолчанию	\N
+defaults.company_name	Наименование организации по-умолчанию	\N
+session	Параметры текущего сеанса	\N
+session.work_date	\N	\N
+session.active_company	\N	\N
+\.
 
 
 --
--- TOC entry 2171 (class 0 OID 37328)
+-- TOC entry 2199 (class 0 OID 37328)
 -- Dependencies: 171
 -- Data for Name: param_values; Type: TABLE DATA; Schema: dic; Owner: -
 --
 
-INSERT INTO param_values (usr, cmp, param, val, dt_b, dt_e) VALUES ('', NULL, 'defaults.company_name', 'Моя организация', '-infinity', 'infinity');
+COPY param_values (usr, cmp, param, val, dt_b, dt_e) FROM stdin;
+	\N	defaults.company_name	Моя организация	-infinity	infinity
+\.
 
 
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 2172 (class 0 OID 37337)
+-- TOC entry 2207 (class 0 OID 45313)
+-- Dependencies: 184
+-- Data for Name: descr; Type: TABLE DATA; Schema: obj; Owner: -
+--
+
+COPY descr (obj_code, req_code, req_type, isarray, label, note) FROM stdin;
+doc.pp	date	date	f	Дата	Дата документа
+doc.pp	number	string	f	Номер	Номер документа
+doc.pp	sum	money	f	Сумма	Сумма документа
+doc.pp	sender	dic.org	f	Отправитель	\N
+doc.pp	reciever	dic.org	f	Получатель	\N
+doc.pp	note	text	f	Назначение платежа	\N
+doc.pp	reciever.inn	string	f	ИНН отправителя	\N
+doc.pp	reciever.kpp	string	f	КПП отправителя	\N
+doc.pp	reciever.name	string	f	Наименование отправителя	\N
+\.
+
+
+--
+-- TOC entry 2200 (class 0 OID 37337)
 -- Dependencies: 172
 -- Data for Name: objects; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-INSERT INTO objects (id, cmp, parent, code) VALUES (2, NULL, NULL, 'doc');
-INSERT INTO objects (id, cmp, parent, code) VALUES (3, NULL, NULL, 'doc.pp');
+COPY objects (id, cmp, parent, code) FROM stdin;
+2	\N	\N	doc
+3	\N	\N	doc.pp
+\.
 
 
 --
--- TOC entry 2173 (class 0 OID 37345)
+-- TOC entry 2201 (class 0 OID 37345)
 -- Dependencies: 174
 -- Data for Name: req; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-INSERT INTO req (id, obj, parent, code, val, seq) VALUES (4, 2, NULL, 'number', '229', NULL);
-INSERT INTO req (id, obj, parent, code, val, seq) VALUES (6, 2, 4, 'req', 'val', NULL);
-INSERT INTO req (id, obj, parent, code, val, seq) VALUES (7, 2, 4, 'req2', 'val2', NULL);
+COPY req (id, obj, parent, code, val, seq) FROM stdin;
+4	2	\N	number	229	\N
+6	2	4	req	val	\N
+7	2	4	req2	val2	\N
+\.
+
+
+--
+-- TOC entry 2206 (class 0 OID 45305)
+-- Dependencies: 183
+-- Data for Name: types; Type: TABLE DATA; Schema: obj; Owner: -
+--
+
+COPY types (code, fn_save, fn_restore) FROM stdin;
+date	\N	\N
+string	\N	\N
+money	\N	\N
+text	\N	\N
+\.
 
 
 SET search_path = sec, pg_catalog;
 
 --
--- TOC entry 2174 (class 0 OID 37354)
+-- TOC entry 2202 (class 0 OID 37354)
 -- Dependencies: 176
 -- Data for Name: companies; Type: TABLE DATA; Schema: sec; Owner: -
 --
 
+COPY companies (id, nm) FROM stdin;
+\.
 
 
 --
--- TOC entry 2175 (class 0 OID 37361)
+-- TOC entry 2203 (class 0 OID 37361)
 -- Dependencies: 177
 -- Data for Name: users; Type: TABLE DATA; Schema: sec; Owner: -
 --
 
+COPY users (user_name, company) FROM stdin;
+\.
 
 
 SET search_path = test, pg_catalog;
 
 --
--- TOC entry 2176 (class 0 OID 37372)
+-- TOC entry 2204 (class 0 OID 37372)
 -- Dependencies: 179
 -- Data for Name: results; Type: TABLE DATA; Schema: test; Owner: -
 --
 
+COPY results (id, dt, code, result) FROM stdin;
+\.
 
 
 --
--- TOC entry 2177 (class 0 OID 37381)
+-- TOC entry 2205 (class 0 OID 37381)
 -- Dependencies: 181
 -- Data for Name: tests; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-INSERT INTO tests (code, res, id) VALUES ('param_value_get(''defaults.company_name'')', 'Моя организация', 2);
+COPY tests (code, res, id) FROM stdin;
+param_value_get('defaults.company_name')	Моя организация	2
+\.
 
 
 SET search_path = app, pg_catalog;
 
 --
--- TOC entry 2136 (class 2606 OID 37393)
+-- TOC entry 2160 (class 2606 OID 37393)
 -- Dependencies: 168 168 168
 -- Name: pk_actions; Type: CONSTRAINT; Schema: app; Owner: -
 --
@@ -1143,7 +1293,7 @@ ALTER TABLE ONLY actions
 
 
 --
--- TOC entry 2138 (class 2606 OID 37395)
+-- TOC entry 2162 (class 2606 OID 37395)
 -- Dependencies: 169 169
 -- Name: pk_modes; Type: CONSTRAINT; Schema: app; Owner: -
 --
@@ -1155,7 +1305,7 @@ ALTER TABLE ONLY modes
 SET search_path = dic, pg_catalog;
 
 --
--- TOC entry 2140 (class 2606 OID 37397)
+-- TOC entry 2164 (class 2606 OID 37397)
 -- Dependencies: 170 170
 -- Name: pk_param_def; Type: CONSTRAINT; Schema: dic; Owner: -
 --
@@ -1165,7 +1315,7 @@ ALTER TABLE ONLY param_def
 
 
 --
--- TOC entry 2143 (class 2606 OID 37399)
+-- TOC entry 2167 (class 2606 OID 37399)
 -- Dependencies: 171 171 171 171
 -- Name: pk_param_values; Type: CONSTRAINT; Schema: dic; Owner: -
 --
@@ -1177,7 +1327,17 @@ ALTER TABLE ONLY param_values
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 2147 (class 2606 OID 37401)
+-- TOC entry 2188 (class 2606 OID 45320)
+-- Dependencies: 184 184 184
+-- Name: pk_descr; Type: CONSTRAINT; Schema: obj; Owner: -
+--
+
+ALTER TABLE ONLY descr
+    ADD CONSTRAINT pk_descr PRIMARY KEY (obj_code, req_code);
+
+
+--
+-- TOC entry 2171 (class 2606 OID 37401)
 -- Dependencies: 172 172
 -- Name: pk_objects; Type: CONSTRAINT; Schema: obj; Owner: -
 --
@@ -1187,7 +1347,7 @@ ALTER TABLE ONLY objects
 
 
 --
--- TOC entry 2151 (class 2606 OID 37403)
+-- TOC entry 2175 (class 2606 OID 37403)
 -- Dependencies: 174 174
 -- Name: pk_req; Type: CONSTRAINT; Schema: obj; Owner: -
 --
@@ -1196,10 +1356,20 @@ ALTER TABLE ONLY req
     ADD CONSTRAINT pk_req PRIMARY KEY (id);
 
 
+--
+-- TOC entry 2186 (class 2606 OID 45312)
+-- Dependencies: 183 183
+-- Name: pk_types; Type: CONSTRAINT; Schema: obj; Owner: -
+--
+
+ALTER TABLE ONLY types
+    ADD CONSTRAINT pk_types PRIMARY KEY (code);
+
+
 SET search_path = sec, pg_catalog;
 
 --
--- TOC entry 2153 (class 2606 OID 37405)
+-- TOC entry 2177 (class 2606 OID 37405)
 -- Dependencies: 176 176
 -- Name: pk_companies; Type: CONSTRAINT; Schema: sec; Owner: -
 --
@@ -1209,7 +1379,7 @@ ALTER TABLE ONLY companies
 
 
 --
--- TOC entry 2156 (class 2606 OID 37407)
+-- TOC entry 2180 (class 2606 OID 37407)
 -- Dependencies: 177 177 177
 -- Name: pk_users; Type: CONSTRAINT; Schema: sec; Owner: -
 --
@@ -1221,7 +1391,7 @@ ALTER TABLE ONLY users
 SET search_path = test, pg_catalog;
 
 --
--- TOC entry 2158 (class 2606 OID 37409)
+-- TOC entry 2182 (class 2606 OID 37409)
 -- Dependencies: 179 179
 -- Name: pk_results; Type: CONSTRAINT; Schema: test; Owner: -
 --
@@ -1231,7 +1401,7 @@ ALTER TABLE ONLY results
 
 
 --
--- TOC entry 2160 (class 2606 OID 37411)
+-- TOC entry 2184 (class 2606 OID 37411)
 -- Dependencies: 181 181
 -- Name: pk_tests; Type: CONSTRAINT; Schema: test; Owner: -
 --
@@ -1243,8 +1413,8 @@ ALTER TABLE ONLY tests
 SET search_path = dic, pg_catalog;
 
 --
--- TOC entry 2141 (class 1259 OID 37412)
--- Dependencies: 1534 171
+-- TOC entry 2165 (class 1259 OID 37412)
+-- Dependencies: 171 1557
 -- Name: fki_param_values_param; Type: INDEX; Schema: dic; Owner: -
 --
 
@@ -1254,7 +1424,7 @@ CREATE INDEX fki_param_values_param ON param_values USING btree (param);
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 2144 (class 1259 OID 37413)
+-- TOC entry 2168 (class 1259 OID 37413)
 -- Dependencies: 172
 -- Name: fki_objects_cmp; Type: INDEX; Schema: obj; Owner: -
 --
@@ -1263,7 +1433,7 @@ CREATE INDEX fki_objects_cmp ON objects USING btree (cmp);
 
 
 --
--- TOC entry 2145 (class 1259 OID 37414)
+-- TOC entry 2169 (class 1259 OID 37414)
 -- Dependencies: 172
 -- Name: fki_objects_parent; Type: INDEX; Schema: obj; Owner: -
 --
@@ -1272,7 +1442,7 @@ CREATE INDEX fki_objects_parent ON objects USING btree (parent);
 
 
 --
--- TOC entry 2148 (class 1259 OID 37415)
+-- TOC entry 2172 (class 1259 OID 37415)
 -- Dependencies: 174
 -- Name: fki_req_obj; Type: INDEX; Schema: obj; Owner: -
 --
@@ -1281,7 +1451,7 @@ CREATE INDEX fki_req_obj ON req USING btree (obj);
 
 
 --
--- TOC entry 2149 (class 1259 OID 37416)
+-- TOC entry 2173 (class 1259 OID 37416)
 -- Dependencies: 174
 -- Name: fki_req_parent; Type: INDEX; Schema: obj; Owner: -
 --
@@ -1292,7 +1462,7 @@ CREATE INDEX fki_req_parent ON req USING btree (parent);
 SET search_path = sec, pg_catalog;
 
 --
--- TOC entry 2154 (class 1259 OID 37417)
+-- TOC entry 2178 (class 1259 OID 37417)
 -- Dependencies: 177
 -- Name: fki_users_company; Type: INDEX; Schema: sec; Owner: -
 --
@@ -1303,8 +1473,8 @@ CREATE INDEX fki_users_company ON users USING btree (company);
 SET search_path = app, pg_catalog;
 
 --
--- TOC entry 2161 (class 2606 OID 37418)
--- Dependencies: 1376 2137 168 169
+-- TOC entry 2189 (class 2606 OID 37418)
+-- Dependencies: 168 1399 2161 169
 -- Name: fk_actions_tree; Type: FK CONSTRAINT; Schema: app; Owner: -
 --
 
@@ -1315,8 +1485,8 @@ ALTER TABLE ONLY actions
 SET search_path = dic, pg_catalog;
 
 --
--- TOC entry 2162 (class 2606 OID 37423)
--- Dependencies: 171 1376 170 2139
+-- TOC entry 2190 (class 2606 OID 37423)
+-- Dependencies: 2163 171 1399 170
 -- Name: fk_param_values_param; Type: FK CONSTRAINT; Schema: dic; Owner: -
 --
 
@@ -1327,8 +1497,8 @@ ALTER TABLE ONLY param_values
 SET search_path = obj, pg_catalog;
 
 --
--- TOC entry 2163 (class 2606 OID 37428)
--- Dependencies: 2152 176 172
+-- TOC entry 2191 (class 2606 OID 37428)
+-- Dependencies: 176 2176 172
 -- Name: fk_objects_cmp; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1337,8 +1507,8 @@ ALTER TABLE ONLY objects
 
 
 --
--- TOC entry 2164 (class 2606 OID 37433)
--- Dependencies: 172 172 2146
+-- TOC entry 2192 (class 2606 OID 37433)
+-- Dependencies: 2170 172 172
 -- Name: fk_objects_parent; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1347,8 +1517,8 @@ ALTER TABLE ONLY objects
 
 
 --
--- TOC entry 2165 (class 2606 OID 37438)
--- Dependencies: 2146 174 172
+-- TOC entry 2193 (class 2606 OID 37438)
+-- Dependencies: 174 172 2170
 -- Name: fk_req_obj; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1357,8 +1527,8 @@ ALTER TABLE ONLY req
 
 
 --
--- TOC entry 2166 (class 2606 OID 37443)
--- Dependencies: 174 174 2150
+-- TOC entry 2194 (class 2606 OID 37443)
+-- Dependencies: 174 2174 174
 -- Name: fk_req_parent; Type: FK CONSTRAINT; Schema: obj; Owner: -
 --
 
@@ -1369,8 +1539,8 @@ ALTER TABLE ONLY req
 SET search_path = sec, pg_catalog;
 
 --
--- TOC entry 2167 (class 2606 OID 37448)
--- Dependencies: 2152 177 176
+-- TOC entry 2195 (class 2606 OID 37448)
+-- Dependencies: 176 2176 177
 -- Name: fk_users_company; Type: FK CONSTRAINT; Schema: sec; Owner: -
 --
 
@@ -1378,7 +1548,7 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_company FOREIGN KEY (company) REFERENCES companies(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2012-03-10 11:38:50 MSK
+-- Completed on 2012-03-12 15:52:24 MSK
 
 --
 -- PostgreSQL database dump complete
