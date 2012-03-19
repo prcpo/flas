@@ -4,7 +4,7 @@
 
 -- Dumped from database version 9.1.3
 -- Dumped by pg_dump version 9.1.3
--- Started on 2012-03-12 15:52:23 MSK
+-- Started on 2012-03-19 07:28:48 MSK
 
 SET statement_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -1128,9 +1128,7 @@ SET search_path = app, pg_catalog;
 -- Data for Name: actions; Type: TABLE DATA; Schema: app; Owner: -
 --
 
-COPY actions (tree, action, lbl, func) FROM stdin;
-doc.pay	open	*Список	doc_list
-\.
+INSERT INTO actions (tree, action, lbl, func) VALUES ('doc.pay', 'open', '*Список', 'doc_list');
 
 
 --
@@ -1139,12 +1137,10 @@ doc.pay	open	*Список	doc_list
 -- Data for Name: modes; Type: TABLE DATA; Schema: app; Owner: -
 --
 
-COPY modes (tree, lbl) FROM stdin;
-doc	Документы
-dic	Справочники
-doc.pay	Платёжные поручения
-dic.companies	Организации
-\.
+INSERT INTO modes (tree, lbl) VALUES ('doc', 'Документы');
+INSERT INTO modes (tree, lbl) VALUES ('dic', 'Справочники');
+INSERT INTO modes (tree, lbl) VALUES ('doc.pay', 'Платёжные поручения');
+INSERT INTO modes (tree, lbl) VALUES ('dic.companies', 'Организации');
 
 
 SET search_path = dic, pg_catalog;
@@ -1155,13 +1151,11 @@ SET search_path = dic, pg_catalog;
 -- Data for Name: param_def; Type: TABLE DATA; Schema: dic; Owner: -
 --
 
-COPY param_def (tree, lbl, note) FROM stdin;
-defaults	Настройки по-умолчанию	\N
-defaults.company_name	Наименование организации по-умолчанию	\N
-session	Параметры текущего сеанса	\N
-session.work_date	\N	\N
-session.active_company	\N	\N
-\.
+INSERT INTO param_def (tree, lbl, note) VALUES ('defaults', 'Настройки по-умолчанию', NULL);
+INSERT INTO param_def (tree, lbl, note) VALUES ('defaults.company_name', 'Наименование организации по-умолчанию', NULL);
+INSERT INTO param_def (tree, lbl, note) VALUES ('session', 'Параметры текущего сеанса', NULL);
+INSERT INTO param_def (tree, lbl, note) VALUES ('session.work_date', NULL, NULL);
+INSERT INTO param_def (tree, lbl, note) VALUES ('session.active_company', NULL, NULL);
 
 
 --
@@ -1170,9 +1164,7 @@ session.active_company	\N	\N
 -- Data for Name: param_values; Type: TABLE DATA; Schema: dic; Owner: -
 --
 
-COPY param_values (usr, cmp, param, val, dt_b, dt_e) FROM stdin;
-	\N	defaults.company_name	Моя организация	-infinity	infinity
-\.
+INSERT INTO param_values (usr, cmp, param, val, dt_b, dt_e) VALUES ('', NULL, 'defaults.company_name', 'Моя организация', '-infinity', 'infinity');
 
 
 SET search_path = obj, pg_catalog;
@@ -1183,17 +1175,15 @@ SET search_path = obj, pg_catalog;
 -- Data for Name: descr; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-COPY descr (obj_code, req_code, req_type, isarray, label, note) FROM stdin;
-doc.pp	date	date	f	Дата	Дата документа
-doc.pp	number	string	f	Номер	Номер документа
-doc.pp	sum	money	f	Сумма	Сумма документа
-doc.pp	sender	dic.org	f	Отправитель	\N
-doc.pp	reciever	dic.org	f	Получатель	\N
-doc.pp	note	text	f	Назначение платежа	\N
-doc.pp	reciever.inn	string	f	ИНН отправителя	\N
-doc.pp	reciever.kpp	string	f	КПП отправителя	\N
-doc.pp	reciever.name	string	f	Наименование отправителя	\N
-\.
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'date', 'date', false, 'Дата', 'Дата документа');
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'number', 'string', false, 'Номер', 'Номер документа');
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'sum', 'money', false, 'Сумма', 'Сумма документа');
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'sender', 'dic.org', false, 'Отправитель', NULL);
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'reciever', 'dic.org', false, 'Получатель', NULL);
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'note', 'text', false, 'Назначение платежа', NULL);
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'reciever.inn', 'string', false, 'ИНН отправителя', NULL);
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'reciever.kpp', 'string', false, 'КПП отправителя', NULL);
+INSERT INTO descr (obj_code, req_code, req_type, isarray, label, note) VALUES ('doc.pp', 'reciever.name', 'string', false, 'Наименование отправителя', NULL);
 
 
 --
@@ -1202,10 +1192,8 @@ doc.pp	reciever.name	string	f	Наименование отправителя	\N
 -- Data for Name: objects; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-COPY objects (id, cmp, parent, code) FROM stdin;
-2	\N	\N	doc
-3	\N	\N	doc.pp
-\.
+INSERT INTO objects (id, cmp, parent, code) VALUES (2, NULL, NULL, 'doc');
+INSERT INTO objects (id, cmp, parent, code) VALUES (3, NULL, NULL, 'doc.pp');
 
 
 --
@@ -1214,11 +1202,9 @@ COPY objects (id, cmp, parent, code) FROM stdin;
 -- Data for Name: req; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-COPY req (id, obj, parent, code, val, seq) FROM stdin;
-4	2	\N	number	229	\N
-6	2	4	req	val	\N
-7	2	4	req2	val2	\N
-\.
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (4, 2, NULL, 'number', '229', NULL);
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (6, 2, 4, 'req', 'val', NULL);
+INSERT INTO req (id, obj, parent, code, val, seq) VALUES (7, 2, 4, 'req2', 'val2', NULL);
 
 
 --
@@ -1227,12 +1213,10 @@ COPY req (id, obj, parent, code, val, seq) FROM stdin;
 -- Data for Name: types; Type: TABLE DATA; Schema: obj; Owner: -
 --
 
-COPY types (code, fn_save, fn_restore) FROM stdin;
-date	\N	\N
-string	\N	\N
-money	\N	\N
-text	\N	\N
-\.
+INSERT INTO types (code, fn_save, fn_restore) VALUES ('date', NULL, NULL);
+INSERT INTO types (code, fn_save, fn_restore) VALUES ('string', NULL, NULL);
+INSERT INTO types (code, fn_save, fn_restore) VALUES ('money', NULL, NULL);
+INSERT INTO types (code, fn_save, fn_restore) VALUES ('text', NULL, NULL);
 
 
 SET search_path = sec, pg_catalog;
@@ -1243,8 +1227,6 @@ SET search_path = sec, pg_catalog;
 -- Data for Name: companies; Type: TABLE DATA; Schema: sec; Owner: -
 --
 
-COPY companies (id, nm) FROM stdin;
-\.
 
 
 --
@@ -1253,8 +1235,6 @@ COPY companies (id, nm) FROM stdin;
 -- Data for Name: users; Type: TABLE DATA; Schema: sec; Owner: -
 --
 
-COPY users (user_name, company) FROM stdin;
-\.
 
 
 SET search_path = test, pg_catalog;
@@ -1265,8 +1245,6 @@ SET search_path = test, pg_catalog;
 -- Data for Name: results; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY results (id, dt, code, result) FROM stdin;
-\.
 
 
 --
@@ -1275,9 +1253,7 @@ COPY results (id, dt, code, result) FROM stdin;
 -- Data for Name: tests; Type: TABLE DATA; Schema: test; Owner: -
 --
 
-COPY tests (code, res, id) FROM stdin;
-param_value_get('defaults.company_name')	Моя организация	2
-\.
+INSERT INTO tests (code, res, id) VALUES ('param_value_get(''defaults.company_name'')', 'Моя организация', 2);
 
 
 SET search_path = app, pg_catalog;
@@ -1548,7 +1524,7 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT fk_users_company FOREIGN KEY (company) REFERENCES companies(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2012-03-12 15:52:24 MSK
+-- Completed on 2012-03-19 07:28:48 MSK
 
 --
 -- PostgreSQL database dump complete
