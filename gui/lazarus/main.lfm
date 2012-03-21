@@ -12,7 +12,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   OnResize = FormResize
   Position = poDesktopCenter
-  LCLVersion = '0.9.30'
+  LCLVersion = '0.9.30.4'
   object StatusBar: TStatusBar
     Left = 0
     Height = 21
@@ -63,8 +63,11 @@ object MainForm: TMainForm
             Width = 150
             Align = alClient
             DefaultItemHeight = 19
+            ReadOnly = True
             ScrollBars = ssAutoBoth
             TabOrder = 0
+            OnDblClick = NavigatorDblClick
+            Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
           end
         end
         object SideCenter: TPairSplitterSide
@@ -112,6 +115,7 @@ object MainForm: TMainForm
             TabIndex = 0
             TabOrder = 1
             TabPosition = tpBottom
+            OnCloseTabClicked = PagerCloseTabClicked
             Options = [nboShowCloseButtons, nboMultiLine]
             object TabSheet1: TTabSheet
               Caption = 'О программе'

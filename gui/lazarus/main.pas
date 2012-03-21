@@ -8,7 +8,8 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
   PairSplitter, StdCtrls, Menus, ActnList, StdActns, ExtCtrls, Buttons, EditBtn,
-  fpjson, jsonparser, pqconnection, sqldb, types;
+  Grids, DBGrids, fpjson, jsonparser, pqconnection, sqldb, db, BufDataset,
+  SdfData, memds, types;
 
 type
 
@@ -48,9 +49,11 @@ type
     procedure FormCreate(Sender: TObject);
     procedure Label1Click(Sender: TObject);
     procedure Memo1Change(Sender: TObject);
+    procedure NavigatorDblClick(Sender: TObject);
     procedure NotesHideExecute(Sender: TObject);
     procedure PageCloseExecute(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure PagerCloseTabClicked(Sender: TObject);
     procedure PageSaveCloseExecute(Sender: TObject);
     procedure PageSaveExecute(Sender: TObject);
     procedure PageSheetDBContextPopup(Sender: TObject; MousePos: TPoint;
@@ -58,13 +61,17 @@ type
     procedure ShowConnectPropertiesExecute(Sender: TObject);
     procedure PageToolBarClick(Sender: TObject);
     procedure CreateNewDB(Sender: TObject);
+    procedure OpenMode(Mode: TTreeNode);
   private
     { private declarations }
-    function GetParamObjectFromJSON(J: TJSONData; S: String) : String;
+    function GetParamObjectFromJSON(J: TJSONData; S: String) : TJSONData;
     function CreateFromJSONLabeledEdit(ParentObj: TObject;
              LastControl: TControl; Nm: String; J: TJSONData): TControl;
     function CreateFromJSONCheckBox(ParentObj: TObject;
              LastControl: TControl; Nm: String; J: TJSONData): TControl;
+    function CreateFromJSONTable(ParentObj: TObject;
+             LastControl: TControl; Nm: String; J: TJSONData): TControl;
+    procedure PopulateTable(El: TDBGrid);
     procedure ShowStatus(S: String);
     function StringToJSON(S: String): TJSONData;
     function GetJSONFromDB(SQL: String): TJSONData;
@@ -77,7 +84,6 @@ type
     procedure ShowNote(L: Integer; C: String);
     procedure CloseAllPages();
     procedure RefreshNavigator();
-    function FindPagerTab(N: String): TTabSheet;
     procedure CreatePageControls(Sheet: TTabsheet; JSON: String);
    end;
 
@@ -101,19 +107,19 @@ const
   PageCfgActionsJSON: String = '{"Actions":{"Save":"internal"},{"OK","internal"}}';
   ConnectStatusOff: String = 'Нет подключения';
 
-function TMainForm.GetParamObjectFromJSON(J: TJSONData; S: String) : String;
+function TMainForm.GetParamObjectFromJSON(J: TJSONData; S: String) : TJSONData;
 var
   JR: TJSONData;
 begin
   try
     JR :=  J.Items[TJSONObject(J).IndexOfName(S)];
     try
-      Result := JR.AsString;
+      Result := JR;
     except
-      on EJSON do Result := JR.AsJSON;
+      on EJSON do Result := JR;
     end;
   except
-    on EListError do Result := '';
+    on EListError do Result := nil;
   end;
 end;
 
@@ -148,6 +154,9 @@ begin
   ShowNote(1,'Создаю структуру базы данных.');
   DBConn.ExecuteDirect(Script.Text);
   DBConn.Transaction.CommitRetaining;
+  Script.Text:='alter database ' + DBConn.DatabaseName + ' set search_path to public, ext;';
+  DBConn.ExecuteDirect(Script.Text);
+  DBConn.Transaction.CommitRetaining;
 
   Script.LoadFromFile('init.sql');
   ShowNote(1,'Заполняю базу первичными данными.');
@@ -156,8 +165,25 @@ begin
   ShowNote(1,'Структура базы данных создана успешно.');
   DBConn.Transaction.EndTransaction;
   DBConn.Transaction := nil;
-  Trans.Free;
-  Script.Free;
+  FreeAndNil(Trans);
+  FreeAndNil(Script);
+end;
+
+procedure TMainForm.OpenMode(Mode: TTreeNode);
+var
+  J: TJSONObject;
+  Ja, Jao: TJSONData;
+  i: Integer;
+begin
+  J := TJSONObject(Mode.Data);
+  ShowNote(10,'JSON выбранного: ' + J.AsJSON);
+  Ja := GetParamObjectFromJSON(J.Objects[J.Names[0]] , 'Actions');
+  ShowNote(10,'Действия: ' + Ja.AsJSON);
+  Jao := GetParamObjectFromJSON(Ja, 'open');
+  if not (Jao = nil) then
+     ShowPage(J.Names[0], Mode.Text,
+        GetJSONFromDB('select ' + GetParamObjectFromJSON(Jao, 'Function').AsString
+              + '(''' + J.Names[0] + ''')').AsJSON);
 end;
 
 function TMainForm.CreateFromJSONLabeledEdit(ParentObj: TObject;
@@ -170,8 +196,8 @@ begin
     El := TLabeledEdit.Create(Self);
     El.Parent := TWinControl(ParentObj);
     El.Name := Nm;
-    El.EditLabel.Caption := GetParamObjectFromJSON(J, 'Text');
-    El.Text:=GetParamObjectFromJSON(J, 'Value');
+    El.EditLabel.Caption := GetParamObjectFromJSON(J, 'Text').AsString;
+    El.Text:=GetParamObjectFromJSON(J, 'Value').AsString;
     El.LabelPosition:=lpRight;
     El.AnchorToNeighbour(akTop, 0, LastControl);
     Result := El;
@@ -188,13 +214,74 @@ begin
     El := TCheckBox.Create(Self);
     El.Parent := TWinControl(ParentObj);
     El.Name := Nm;
-    El.Caption := GetParamObjectFromJSON(J, 'Text');
-    El.Checked := (GetParamObjectFromJSON(J, 'Value') = 'true');
+    El.Caption := GetParamObjectFromJSON(J, 'Text').AsString;
+    El.Checked := GetParamObjectFromJSON(J, 'Value').AsBoolean;
     El.AnchorToNeighbour(akTop, 0, LastControl);
     Result := El;
   finally
   end;
 
+end;
+
+function TMainForm.CreateFromJSONTable(ParentObj: TObject;
+  LastControl: TControl; Nm: String; J: TJSONData): TControl;
+var
+  El: TDBGrid;
+  ElSource: TDataSource;
+  ElDataSet: TMemDataset;
+  i: Integer;
+  Jc: TJSONData;
+  colSize: Integer;
+  CurField: TFieldDefs;
+begin
+  try
+    El := TDBGrid.Create(Self);
+    ElSource := TDataSource.Create(El);
+    ElDataSet := TMemDataSet.Create(El);
+    El.Parent := TWinControl(ParentObj);
+    El.Name := Nm;
+    El.AnchorToNeighbour(akTop, 0, LastControl);
+    El.DataSource:=ElSource;
+    El.Align := alClient;
+    Jc:=GetParamObjectFromJSON(J,'Columns');
+    ShowNote(10,'Столбцы: ' + Jc.AsJSON);
+    colSize := 12;
+    for i := 0 to Jc.Count-1 do begin
+      ShowNote(10,'Столбец #' + IntToStr(i) + ': ' + TJSONObject(Jc).Names[i] + ' = ' +
+      GetParamObjectFromJSON(Jc.Items[i], 'Text').AsString);
+//      if  TJSONObject(Jc).Names[i] = 'ID' then colSize := 0 else colSize := 10;
+      ElDataSet.FieldDefs.Add(GetParamObjectFromJSON(Jc.Items[i], 'Text').AsString, ftString, colSize);
+//      ElDataSet.FieldDefs[ElDataSet.FieldDefs.Count-1].DisplayName :=GetParamObjectFromJSON(Jc.Items[i], 'Text').AsString;
+      ElDataSet.FieldDefs[ElDataSet.FieldDefs.Count-1].Name :=TJSONObject(Jc).Names[i];
+    end;
+//    ElDataSet.CreateTable;
+    ElSource.DataSet:= ElDataSet;
+    ElDataSet.Open;
+    PopulateTable(El);
+    El.ScrollBars:=ssAutoBoth;
+    Result := El;
+  finally
+    FreeAndNil(Jc);
+  end;
+end;
+
+procedure TMainForm.PopulateTable(El: TDBGrid);
+var
+  col, row: Integer;
+  J: TJSONData;
+begin
+  J := GetJSONFromDB('select doc_list_get(''doc.pay'')');
+  for row := 0 to J.Count -1 do begin
+    El.DataSource.DataSet.Append;
+    for col:=0 to El.Columns.Count-1 do begin
+      TBufDataSet(El.DataSource.DataSet).Fields[col].AsString :=
+        GetParamObjectFromJSON(J.Items[row], TBufDataSet(El.DataSource.DataSet).Fields[col].FieldName).AsString;
+    end;
+    TBufDataSet(El.DataSource.DataSet).Post;
+    ShowNote(10,'Field: ' + TBufDataSet(El.DataSource.DataSet).Fields[0].FieldName +
+                        ' has value ' + TBufDataSet(El.DataSource.DataSet).Fields[0].AsString);
+  end;
+  El.DataSource.DataSet.First;
 end;
 
 procedure TMainForm.ShowStatus(S: String);
@@ -209,7 +296,7 @@ function TMainForm.StringToJSON(S: String): TJSONData;
   begin
     Try
       J:=P.Parse;
-        ShowNote(10,'Parse succesful. Dumping JSON data : ');
+        ShowNote(10,'Parse succesful. Dumping JSON data : ' + J.AsJSON);
         If Assigned(J) then
           begin
             ShowNote(10,'Returned JSON structure has class : ' + J.ClassName);
@@ -266,24 +353,31 @@ procedure TMainForm.CreateNodeFromJSON(Tree: TTreeNodes; Node: TTreeNode;
   J: TJSONData);
 var
   i: Integer;
-  ModesItem: TJSONData;
+  ModesItem: TJSONObject;
   CurNode: TTreeNode;
 begin
+  ShowNote(10,'Count: ' + IntToStr(J.Count));
+  if J.Count > 0 then
   for i := 0 to J.Count-1 do
   begin
-    //ShowNote(10, 'JSON: ' + GetParamObjectFromJSON(J.Items[i], 'Text'));
-    //ModesItem.Create;
-    ModesItem := J.Items[i];
-    if  LowerCase(GetParamObjectFromJSON(J.Items[i], 'Type')) = 'mode' then
-      begin
-        CurNode := Tree.AddChildObject(Node, GetParamObjectFromJSON(J.Items[i], 'Text'),
-          Pointer(ModesItem));
-        //if GetParamObjectFromJSON(J.Items[i], 'Actions') > ' ' then
-        //  CurNode.ImageIndex:=12;
+    ModesItem := TJSONObject.Create();
+    ModesItem.Add(TJSONObject(J).Names[i],J.Items[i]);
+    try
+        if  LowerCase(GetParamObjectFromJSON(J.Items[i], 'Type').AsString) = 'mode' then
+          begin
+            CurNode := Tree.AddChild(Node, GetParamObjectFromJSON(J.Items[i], 'Text').AsString);
+            CurNode.Data :=  ModesItem;
+            ShowNote(10,'Создана ветвь: ' + ModesItem.AsJSON);
+            //if GetParamObjectFromJSON(J.Items[i], 'Actions') > ' ' then
+            //  CurNode.ImageIndex:=12;
 
-        CreateNodeFromJSON(Tree, CurNode,
-          GetJSONFromDB('select modes_node_children_get(''' + TJSONObject(J).Names[i] + ''')'));
-      end;
+            CreateNodeFromJSON(Tree, CurNode,
+              GetJSONFromDB('select modes_node_children_get(''' + TJSONObject(J).Names[i] + ''')'));
+          end;
+    except
+      On E : Exception do
+        ShowNote(10,'An Exception occurred when parsing : ' + E.Message);
+    end;
   end;
 end;
 
@@ -294,7 +388,8 @@ begin
   try
     NewTab := TTabSheet.Create(Pager);
     NewTab.Parent:=Pager;
-    NewTab.Name:=N;
+    //В БД код объекта может включать точку. Заменяем на два подчеркивания.
+    NewTab.Name:=StringReplace(N,'.','__',[rfReplaceAll]);
     CreatePageControls(NewTab, JSON);
     NewTab.Caption:=C;
     Pager.ActivePage:=NewTab;
@@ -320,7 +415,8 @@ end;
 procedure TMainForm.ShowNote(L: Integer; C: String);
 begin
   if DebugTrackBar.Position >= L then begin
-    Notes.Lines.Add(C);
+    Notes.Lines.Add(':: '+FormatDateTime('hh:mm:ss.zzz',Now()) + ' : ' + C);
+    //Notes.Lines.Add(C);
     Notes.Refresh;
   end;
 end;
@@ -351,11 +447,6 @@ begin
   CreateNodeFromJSON(Navigator.Items, nil, J);
 end;
 
-function TMainForm.FindPagerTab(N: String): TTabSheet;
-begin
-
-end;
-
 procedure TMainForm.CreatePageControls(Sheet: TTabSheet; JSON: String);
   procedure ObjectFromJSON(ParentObj: TObject; J: TJSONData);
   var
@@ -368,17 +459,19 @@ procedure TMainForm.CreatePageControls(Sheet: TTabSheet; JSON: String);
       for i:=0 to J.Count-1 do
       begin
         OName := TJSONObject(J).Names[i];
-        OType := GetParamObjectFromJSON(J.Items[i], 'Type');
+        OType := GetParamObjectFromJSON(J.Items[i], 'Type').AsString;
         ShowNote(10,'Item #' + IntToStr(i) + ': ' + Oname
           + ' = ' + J.Items[i].AsJSON);
 
         if not (OType = '') then
         begin
-          ShowNote(10, 'Type: ' + Otype);
+          ShowNote(10, 'Type: ' + OType);
           if LowerCase(OType) = 'string' then
             LastControl := CreateFromJSONLabeledEdit(ParentObj, LastControl, OName, J.Items[i]);
           if LowerCase(OType) = 'check' then
             LastControl := CreateFromJSONCheckBox(ParentObj, LastControl, OName, J.Items[i]);
+          if LowerCase(OType) = 'table' then
+            LastControl := CreateFromJSONTable(ParentObj, LastControl, OName, J.Items[i]);
         end;
       end;
     except
@@ -401,6 +494,11 @@ end;
 procedure TMainForm.FormResize(Sender: TObject);
 begin
 
+end;
+
+procedure TMainForm.PagerCloseTabClicked(Sender: TObject);
+begin
+  ClosePage(TCustomPage(Sender));
 end;
 
 procedure TMainForm.PageSaveCloseExecute(Sender: TObject);
@@ -468,6 +566,11 @@ end;
 procedure TMainForm.Memo1Change(Sender: TObject);
 begin
 
+end;
+
+procedure TMainForm.NavigatorDblClick(Sender: TObject);
+begin
+  OpenMode(Navigator.Selected);
 end;
 
 procedure TMainForm.NotesHideExecute(Sender: TObject);
